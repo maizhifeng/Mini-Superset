@@ -1,0 +1,28 @@
+<div class="flex flex-col gap-6">
+  @if (dashboardService.pinnedCharts().length > 0) {
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      @for (chart of dashboardService.pinnedCharts(); track chart.id) {
+        <div class="bg-[var(--md-sys-color-surface-container)] rounded-2xl border border-[var(--md-sys-color-outline-variant)] p-4 flex flex-col transition-colors hover:bg-[var(--md-sys-color-surface-container-high)]">
+          <div class="flex justify-between items-center mb-2">
+            <h3 class="text-base font-medium text-[var(--md-sys-color-on-surface-variant)] truncate" [title]="chart.title">
+              {{ chart.title }}
+            </h3>
+            <button (click)="dashboardService.removeChart(chart.id)" title="移除图表" class="w-10 h-10 flex items-center justify-center rounded-full transition-colors duration-150 ease-in-out focus-visible:outline-none text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-error-container)] hover:text-[var(--md-sys-color-on-error-container)] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--md-sys-color-surface-container)] focus-visible:ring-[var(--md-sys-color-error)] active:bg-[var(--md-sys-color-error-container)]/80">
+              🗑️
+            </button>
+          </div>
+          <div class="flex-grow min-h-[300px] relative">
+            <app-chart [config]="chart"></app-chart>
+          </div>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="text-center p-8 bg-[var(--md-sys-color-surface-container)] rounded-2xl border border-[var(--md-sys-color-outline-variant)]">
+        <h2 class="text-4xl font-normal text-[var(--md-sys-color-on-surface)] mb-2">仪表板为空 📊</h2>
+        <p class="text-[var(--md-sys-color-on-surface-variant)] mb-8 text-lg">
+            前往 <span class="font-semibold text-[var(--md-sys-color-primary)]">SQL 工作台</span>，运行查询，切换到<span class="font-semibold text-[var(--md-sys-color-primary)]">图表</span>选项卡，然后点击<span class="font-semibold text-[var(--md-sys-color-primary)]">📌 固定</span>按钮将图表添加到这里。
+        </p>
+    </div>
+  }
+</div>

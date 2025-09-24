@@ -1,0 +1,5 @@
+{
+  "name": "Mini Superset",
+  "description": "一个轻量级的数据可视化工具，灵感来自 Apache Superset。上传您的 CSV 文件，使用 SQL 进行查询，并立即生成富有洞察力的图表。",
+  "requestFramePermissions": []
+}

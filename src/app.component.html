@@ -1,0 +1,84 @@
+<app-notification-host></app-notification-host>
+<div class="flex h-screen bg-[var(--md-sys-color-background)] text-[var(--md-sys-color-on-surface)]">
+  <!-- Sidebar -->
+  <aside 
+    class="flex flex-col bg-[var(--md-sys-color-surface)] transition-all duration-300 ease-in-out border-r border-[var(--md-sys-color-outline-variant)]"
+    [class.w-64]="isSidebarOpen()"
+    [class.w-20]="!isSidebarOpen()">
+    <div class="flex items-center h-16 px-6 border-b border-white/20 flex-shrink-0 bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)]">
+      <span class="text-2xl mr-4">📊</span>
+      @if (isSidebarOpen()) {
+        <h1 class="text-xl font-bold">Mini Superset</h1>
+      }
+    </div>
+    <nav class="flex-grow p-4 space-y-2 overflow-y-auto">
+      <!-- Main Navigation -->
+      <a
+        (click)="setView('sql-lab')"
+        [class.bg-[var(--md-sys-color-primary-container)]]="activeView() === 'sql-lab'"
+        [class.text-[var(--md-sys-color-on-primary-container)]]="activeView() === 'sql-lab'"
+        class="flex items-center p-3 rounded-full hover:bg-[var(--md-sys-color-surface-container-high)] cursor-pointer transition-colors"
+        [title]="isSidebarOpen() ? '' : 'SQL 工作台'"
+      >
+        <span class="text-2xl">🧪</span>
+        @if (isSidebarOpen()) {
+          <span class="ml-4 font-medium">SQL 工作台</span>
+        }
+      </a>
+      <a
+        (click)="setView('dashboard')"
+        [class.bg-[var(--md-sys-color-primary-container)]]="activeView() === 'dashboard'"
+        [class.text-[var(--md-sys-color-on-primary-container)]]="activeView() === 'dashboard'"
+        class="flex items-center p-3 rounded-full hover:bg-[var(--md-sys-color-surface-container-high)] cursor-pointer transition-colors"
+        [title]="isSidebarOpen() ? '' : '仪表板'"
+      >
+        <span class="text-2xl">📈</span>
+        @if (isSidebarOpen()) {
+          <span class="ml-4 font-medium">仪表板</span>
+        }
+      </a>
+    </nav>
+    <div class="p-4 border-t border-[var(--md-sys-color-outline-variant)] flex-shrink-0">
+        <button (click)="toggleSidebar()" class="w-full flex items-center p-3 rounded-full hover:bg-[var(--md-sys-color-surface-container-high)] cursor-pointer transition-colors" [title]="isSidebarOpen() ? '折叠' : '展开'">
+            @if(isSidebarOpen()) {
+                <span class="text-2xl">⬅️</span>
+                <span class="ml-4 font-medium">折叠</span>
+            } @else {
+                <span class="text-2xl">➡️</span>
+            }
+        </button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="flex-1 flex flex-col overflow-hidden">
+    <header class="flex items-center justify-between h-16 px-6 bg-[var(--md-sys-color-primary)] border-b border-white/20 flex-shrink-0 text-[var(--md-sys-color-on-primary)]">
+      <h2 class="text-xl font-semibold">
+        @if (activeView() === 'sql-lab') {
+          SQL 工作台
+        } @else {
+          仪表板
+        }
+      </h2>
+      <div class="flex items-center space-x-4">
+        <span class="text-sm">欢迎, 分析师!</span>
+        <div class="w-10 h-10 bg-[var(--md-sys-color-primary-container)] rounded-full flex items-center justify-center text-[var(--md-sys-color-on-primary-container)] font-bold">A</div>
+      </div>
+    </header>
+    <div class="flex-1 p-6 overflow-y-auto">
+      @if (databaseService.error()) {
+        <div class="p-4 mb-4 text-sm text-[var(--md-sys-color-on-error-container)] bg-[var(--md-sys-color-error-container)] rounded-lg">
+          <strong>错误:</strong> {{ databaseService.error() }}
+        </div>
+      }
+      @switch (activeView()) {
+        @case ('sql-lab') {
+          <app-sql-lab />
+        }
+        @case ('dashboard') {
+          <app-dashboard />
+        }
+      }
+    </div>
+  </main>
+</div>

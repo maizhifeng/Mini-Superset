@@ -1,0 +1,255 @@
+<div class="flex h-full gap-6">
+  <!-- Left Panel: Database Explorer -->
+  <div class="w-1/3 lg:w-1/4 flex-shrink-0">
+     <app-database-explorer></app-database-explorer>
+  </div>
+
+  <!-- Right Panel: Editor and Results -->
+  <div class="w-2/3 lg:w-3/4 flex flex-col h-full space-y-4">
+    <!-- Top Panel: SQL Editor -->
+    <div class="flex-shrink-0 bg-[var(--md-sys-color-surface-container)] p-4 rounded-2xl border border-[var(--md-sys-color-outline-variant)]">
+      <!-- Editor Tabs & Actions -->
+      <div class="flex justify-between items-center border-b border-[var(--md-sys-color-outline-variant)] mb-4">
+        <div class="flex space-x-2">
+          <button (click)="editorMode.set('sql')"
+                  class="px-4 py-2 text-sm font-medium rounded-full transition-colors"
+                  [class.bg-[var(--md-sys-color-primary-container)]]="editorMode() === 'sql'"
+                  [class.text-[var(--md-sys-color-on-primary-container)]]="editorMode() === 'sql'"
+                  [class.text-[var(--md-sys-color-on-surface-variant)]]="editorMode() !== 'sql'"
+                  [class.hover:bg-[var(--md-sys-color-surface-container-high)]]="editorMode() !== 'sql'">
+            ✏️ SQL 编辑器
+          </button>
+          <button (click)="editorMode.set('n2l')"
+                  class="px-4 py-2 text-sm font-medium rounded-full transition-colors"
+                  [class.bg-[var(--md-sys-color-primary-container)]]="editorMode() === 'n2l'"
+                  [class.text-[var(--md-sys-color-on-primary-container)]]="editorMode() === 'n2l'"
+                  [class.text-[var(--md-sys-color-on-surface-variant)]]="editorMode() !== 'n2l'"
+                  [class.hover:bg-[var(--md-sys-color-surface-container-high)]]="editorMode() !== 'n2l'">
+            💬 自然语言查询 (N2L)
+          </button>
+        </div>
+        
+        <div>
+          @if (editorMode() === 'sql') {
+            <button (click)="runQuery()" class="min-w-[120px] h-10 px-6 flex items-center justify-center rounded-full font-medium text-sm transition-all duration-150 ease-in-out focus-visible:outline-none bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-md hover:shadow-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--md-sys-color-primary)] active:shadow-sm disabled:shadow-none disabled:bg-[var(--md-sys-color-on-surface)]/12 disabled:text-[var(--md-sys-color-on-surface)]/38 disabled:cursor-not-allowed" [disabled]="databaseService.dbStatus() !== 'ready' || isQueryRunning()">
+              @if(isQueryRunning()) {
+                <div class="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+              } @else {
+                <span>▶️ 运行查询</span>
+              }
+            </button>
+          } @else if (editorMode() === 'n2l') {
+            <button (click)="generateSql()" [disabled]="!databaseService.hasSelectedColumns() || aiService.isLoading()" class="min-w-[120px] h-10 px-6 flex items-center justify-center rounded-full font-medium text-sm transition-all duration-150 ease-in-out focus-visible:outline-none bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-md hover:shadow-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--md-sys-color-primary)] active:shadow-sm disabled:shadow-none disabled:bg-[var(--md-sys-color-on-surface)]/12 disabled:text-[var(--md-sys-color-on-surface)]/38 disabled:cursor-not-allowed">
+              @if(aiService.isLoading()) {
+                <div class="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                <span class="ml-2">正在生成</span>
+              } @else {
+                <span>⚙️ 生成 SQL</span>
+              }
+            </button>
+          }
+        </div>
+      </div>
+
+
+      <!-- SQL View Container -->
+      <div [hidden]="editorMode() !== 'sql'">
+        <div class="relative">
+           <label for="sql-editor-textarea" class="absolute -top-2.5 left-3 px-1 text-xs bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface-variant)]">SQL 编辑器</label>
+          <textarea #queryTextarea
+                    id="sql-editor-textarea"
+                    [(ngModel)]="query" 
+                    (input)="onQueryInput($event)"
+                    (keydown)="onQueryKeydown($event)"
+                    (blur)="closeSuggestions()"
+                    rows="6" 
+                    class="w-full pt-5 pb-3 px-4 font-mono text-sm border border-[var(--md-sys-color-outline)] rounded-lg bg-transparent focus:ring-1 focus:ring-[var(--md-sys-color-primary)] focus:border-[var(--md-sys-color-primary)] outline-none resize-y" 
+                    placeholder="-- 例如：SELECT * FROM sales_data LIMIT 100;"
+                    autocomplete="off"
+                    autocorrect="off"
+                    autocapitalize="off"
+                    spellcheck="false"></textarea>
+          @if(isSuggestionsOpen()) {
+            <div class="absolute z-10 w-72 bg-[var(--md-sys-color-surface-bright)] border border-[var(--md-sys-color-outline-variant)] rounded-md shadow-lg mt-1 left-0 top-full">
+              <ul class="py-1 max-h-60 overflow-y-auto">
+                @for(suggestion of suggestions(); track suggestion.text + suggestion.type; let i = $index) {
+                  <li (mousedown)="applySuggestion(suggestion)" 
+                      class="px-3 py-1.5 text-sm cursor-pointer hover:bg-[var(--md-sys-color-surface-container-high)] flex items-center gap-2"
+                      [class.bg-[var(--md-sys-color-surface-container-high)]]="activeSuggestionIndex() === i">
+                    <span class="w-5 text-center">
+                      @switch(suggestion.type) {
+                        @case('keyword') { <span title="关键字">🔑</span> }
+                        @case('table') { <span title="表">📦</span> }
+                        @case('column') { <span title="列">📄</span> }
+                      }
+                    </span>
+                    <span class="font-mono font-medium truncate" [title]="suggestion.display_text || suggestion.text">
+                      {{ suggestion.display_text || suggestion.text }}
+                    </span>
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- N2L View Container -->
+      <div [hidden]="editorMode() !== 'n2l'">
+         <div class="relative">
+            <label for="n2l-textarea" class="absolute -top-2.5 left-3 px-1 text-xs bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface-variant)]">查询描述</label>
+            <textarea id="n2l-textarea"
+                      [(ngModel)]="naturalLanguageQuery"
+                      rows="6"
+                      class="w-full pt-5 pb-3 px-4 font-sans text-sm border border-[var(--md-sys-color-outline)] rounded-lg bg-transparent focus:ring-1 focus:ring-[var(--md-sys-color-primary)] focus:border-[var(--md-sys-color-primary)] outline-none resize-y"
+                      placeholder="例如：按地区显示总销售额和平均利润"
+                      autocorrect="off"
+                      autocapitalize="off"
+                      spellcheck="false"></textarea>
+          </div>
+        @if(!databaseService.hasSelectedColumns()) {
+          <p class="text-xs text-[var(--md-sys-color-on-error-container)] p-2 rounded-md mt-2">
+              ⚠️ 请先从左侧的数据库浏览器中选择至少一列。
+          </p>
+        }
+      </div>
+    </div>
+
+    <!-- Bottom Panel: Results & Chart -->
+    <div class="flex-1 flex flex-col min-h-0 bg-[var(--md-sys-color-surface-container)] p-4 rounded-2xl border border-[var(--md-sys-color-outline-variant)]">
+      <div class="flex-shrink-0 flex justify-between items-center border-b border-[var(--md-sys-color-outline-variant)] mb-4">
+        <nav class="flex space-x-2">
+          <button 
+            (click)="activeTab.set('results')"
+            class="px-4 py-2 text-sm font-medium rounded-full transition-colors"
+            [class.bg-[var(--md-sys-color-secondary-container)]]="activeTab() === 'results'"
+            [class.text-[var(--md-sys-color-on-secondary-container)]]="activeTab() === 'results'"
+            [class.text-[var(--md-sys-color-on-surface-variant)]]="activeTab() !== 'results'"
+            [class.hover:bg-[var(--md-sys-color-surface-container-high)]]="activeTab() !== 'results'"
+          >
+            结果
+          </button>
+          <button 
+            (click)="activeTab.set('chart')"
+            class="px-4 py-2 text-sm font-medium rounded-full transition-colors"
+            [class.bg-[var(--md-sys-color-secondary-container)]]="activeTab() === 'chart'"
+            [class.text-[var(--md-sys-color-on-secondary-container)]]="activeTab() === 'chart'"
+            [class.text-[var(--md-sys-color-on-surface-variant)]]="activeTab() !== 'chart'"
+            [class.hover:bg-[var(--md-sys-color-surface-container-high)]]="activeTab() !== 'chart'"
+          >
+            图表
+          </button>
+        </nav>
+
+        @if(activeTab() === 'chart' && queryResults() && queryResults()!.length > 0) {
+          <div class="flex items-center justify-end gap-4 animate-fade-in">
+              <div class="flex items-end gap-4">
+                <div class="relative">
+                    <label class="absolute -top-2 left-3 px-1 text-xs bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface-variant)]">图表类型</label>
+                    <div class="relative">
+                      <select [(ngModel)]="chartType" class="w-full bg-transparent border border-[var(--md-sys-color-outline)] rounded-lg pl-3 pr-8 py-2.5 text-sm focus:ring-1 focus:ring-[var(--md-sys-color-primary)] focus:border-[var(--md-sys-color-primary)] outline-none appearance-none">
+                          <option value="bar">柱状图</option>
+                          <option value="pie">饼图</option>
+                          <option value="line">折线图</option>
+                      </select>
+                      <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-[var(--md-sys-color-on-surface-variant)]">
+                          <span>▾</span>
+                      </div>
+                    </div>
+                </div>
+                <div class="relative">
+                    <label class="absolute -top-2 left-3 px-1 text-xs bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface-variant)]">标签列</label>
+                    <div class="relative">
+                      <select [(ngModel)]="labelColumn" class="w-full bg-transparent border border-[var(--md-sys-color-outline)] rounded-lg pl-3 pr-8 py-2.5 text-sm focus:ring-1 focus:ring-[var(--md-sys-color-primary)] focus:border-[var(--md-sys-color-primary)] outline-none appearance-none">
+                          @for (header of queryResultHeaders(); track header) {
+                              <option [value]="header">{{ header }}</option>
+                          }
+                      </select>
+                      <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-[var(--md-sys-color-on-surface-variant)]">
+                          <span>▾</span>
+                      </div>
+                    </div>
+                </div>
+                <div class="relative">
+                    <label class="absolute -top-2 left-3 px-1 text-xs bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface-variant)]">数据列</label>
+                    <div class="relative">
+                      <select [(ngModel)]="dataColumn" class="w-full bg-transparent border border-[var(--md-sys-color-outline)] rounded-lg pl-3 pr-8 py-2.5 text-sm focus:ring-1 focus:ring-[var(--md-sys-color-primary)] focus:border-[var(--md-sys-color-primary)] outline-none appearance-none">
+                          @for (header of queryResultHeaders(); track header) {
+                              <option [value]="header">{{ header }}</option>
+                          }
+                      </select>
+                       <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-[var(--md-sys-color-on-surface-variant)]">
+                          <span>▾</span>
+                      </div>
+                    </div>
+                </div>
+              </div>
+              <button (click)="pinChart()" [disabled]="!isChartConfigValid()" title="固定到仪表板" class="min-w-[120px] h-10 px-6 flex items-center justify-center rounded-full font-medium text-sm transition-all duration-150 ease-in-out focus-visible:outline-none bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-md hover:shadow-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--md-sys-color-surface-container-low)] focus-visible:ring-[var(--md-sys-color-primary)] active:shadow-sm disabled:shadow-none disabled:bg-[var(--md-sys-color-on-surface)]/12 disabled:text-[var(--md-sys-color-on-surface)]/38 disabled:cursor-not-allowed">
+                <span>📌 固定</span>
+              </button>
+            </div>
+        }
+      </div>
+
+      <div class="flex-1 min-h-0">
+        @if (queryError()) {
+          <div class="p-4 text-sm text-[var(--md-sys-color-on-error-container)] bg-[var(--md-sys-color-error-container)] rounded-lg">
+            <strong>查询错误:</strong> {{ queryError() }}
+          </div>
+        }
+        
+        @switch (activeTab()) {
+          @case ('results') {
+            @if (queryResults(); as results) {
+              <div class="h-full overflow-auto">
+                  @if (queryResultHeaders().length > 0) {
+                      <table class="min-w-full divide-y divide-[var(--md-sys-color-outline-variant)]">
+                          <thead class="bg-[var(--md-sys-color-surface-container-low)] sticky top-0">
+                              <tr>
+                                  @for (header of queryResultHeaders(); track header) {
+                                      <th scope="col" class="px-6 py-3 text-left text-sm font-medium text-[var(--md-sys-color-on-surface-variant)] tracking-wider">{{ header }}</th>
+                                  }
+                              </tr>
+                          </thead>
+                          <tbody class="divide-y divide-[var(--md-sys-color-outline-variant)]">
+                              @for (row of results; track $index) {
+                                  <tr class="odd:bg-[var(--md-sys-color-surface-container-low)] even:bg-[var(--md-sys-color-surface-bright)] hover:bg-[var(--md-sys-color-surface-container-high)]">
+                                      @for (header of queryResultHeaders(); track header) {
+                                          <td class="px-6 py-4 whitespace-nowrap text-base text-[var(--md-sys-color-on-surface-variant)]">{{ row[header] }}</td>
+                                      }
+                                  </tr>
+                              }
+                          </tbody>
+                      </table>
+                      @if(results.length === 0) {
+                         <p class="text-center text-[var(--md-sys-color-on-surface-variant)] mt-8">查询成功，但未返回任何行。</p>
+                      }
+                  } @else {
+                      <p class="text-center text-[var(--md-sys-color-on-surface-variant)] mt-8">查询执行成功。</p>
+                  }
+              </div>
+            } @else if (!queryError()) {
+              <p class="text-center text-[var(--md-sys-color-on-surface-variant)] mt-8">运行查询以查看结果。</p>
+            }
+          }
+          @case ('chart') {
+            @if (queryResults() && queryResults()!.length > 0) {
+              <div class="flex flex-col h-full">
+                  <!-- Chart Canvas -->
+                  <div class="flex-1 relative min-h-0">
+                      @if(isChartConfigValid()) {
+                        <canvas #chartCanvas></canvas>
+                      } @else {
+                          <div class="flex items-center justify-center h-full text-[var(--md-sys-color-on-surface-variant)]">请选择有效的标签和数据列来生成图表。</div>
+                      }
+                  </div>
+              </div>
+            } @else {
+              <p class="text-center text-[var(--md-sys-color-on-surface-variant)] mt-8">运行一个返回数据的查询以创建图表。</p>
+            }
+          }
+        }
+      </div>
+    </div>
+  </div>
+</div>
