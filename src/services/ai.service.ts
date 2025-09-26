@@ -29,8 +29,6 @@ export class AiService {
             throw new Error("请至少选择一列以生成 SQL。");
         }
         
-        // FIX: Replaced `reduce` with a `for...of` loop to fix a type inference error on `columns.join`.
-        // This approach is more robust and readable for grouping columns by table.
         const groupedColumns: Record<string, string[]> = {};
         for (const col of selectedColumns) {
             if (!groupedColumns[col.tableName]) {
@@ -91,8 +89,6 @@ ${naturalLanguagePrompt}
     }
     
     // 按表对列进行分组
-    // FIX: Replaced `reduce` with a `for...of` loop to fix a type inference error on `columns.join`.
-    // This approach is more robust and readable for grouping columns by table.
     const groupedColumns: Record<string, string[]> = {};
     for (const col of selectedColumns) {
         if (!groupedColumns[col.tableName]) {

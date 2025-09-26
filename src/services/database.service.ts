@@ -1,5 +1,4 @@
 import { Injectable, signal, computed } from '@angular/core';
-// FIX: Corrected type to `Results` which is the correct exported member from '@electric-sql/pglite'.
 import type { PGlite, Results } from '@electric-sql/pglite';
 
 // 表格列的接口
@@ -331,7 +330,6 @@ export class DatabaseService {
     this.selectedColumns.set([]);
   }
 
-  // FIX: Corrected return type to `Results` which is the correct type.
   async runQuery(query: string): Promise<Results<any>> {
     const db = this.db();
     if (!db) {
