@@ -1,140 +1,97 @@
-<div class="h-full bg-[var(--theme-bg-card)] p-4 rounded-lg border border-[var(--theme-border)] shadow-sm flex flex-col">
-  <h3 class="text-lg font-medium text-[var(--theme-text-secondary)] mb-4 flex-shrink-0">🗂️ 数据库</h3>
+<div class="h-full bg-[var(--theme-bg-card)] rounded-lg border border-[var(--theme-border)] shadow-sm flex flex-col">
+  <header class="p-4 border-b border-[var(--theme-border)] flex-shrink-0">
+    <h3 class="font-semibold text-lg text-[var(--theme-text-primary)]">数据库浏览器</h3>
+    <p class="text-sm text-[var(--theme-text-secondary)]">选择表和列以开始。</p>
+  </header>
   
-  <div class="mb-4 flex-shrink-0 flex flex-col gap-2">
-     @switch(databaseService.dbStatus()) {
-        @case('ready') {
-          <button (click)="uploadModal().open()" class="w-full h-10 px-5 flex items-center justify-center rounded-md font-medium text-sm transition-colors duration-150 ease-in-out focus-visible:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--theme-accent-primary)] bg-[var(--theme-accent-primary)] text-[var(--theme-accent-primary-on)] hover:bg-[var(--theme-accent-primary-hover)] disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed" [disabled]="databaseService.isLoading()">
-            @if(databaseService.isLoading()) {
-              <span>正在加载...</span>
-            } @else {
-              <span>+ 上传 CSV</span>
-            }
-          </button>
-          
-          <!-- AI Suggestions Button -->
-          @if (databaseService.hasSelectedColumns()) {
-            <button (click)="getAiSuggestions()" class="w-full h-10 px-5 flex items-center justify-center rounded-md font-medium text-sm transition-colors duration-150 ease-in-out focus-visible:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[var(--theme-bg-card)] focus:ring-[var(--theme-accent-secondary-on-container)] bg-[var(--theme-accent-secondary-container)] text-[var(--theme-accent-secondary-on-container)] hover:bg-emerald-200/80 disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed" [disabled]="aiService.isLoading()">
-              @if(aiService.isLoading()) {
-                <div class="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                <span class="ml-2">生成中...</span>
-              } @else {
-                <span>✨ 获取建议</span>
-              }
-            </button>
-          }
-        }
-        @case('initializing') {
-            <div class="text-sm text-[var(--theme-text-secondary)] p-2 animate-pulse">正在初始化... ⚙️</div>
-        }
-        @case('error') {
-            <div class="p-2 text-xs text-red-800 bg-red-100 rounded-md">
-            初始化失败
-            </div>
-        }
-      }
+  <div class="p-4 flex-shrink-0 space-y-3">
+    <button (click)="uploadModal().open()" class="w-full h-10 px-5 flex items-center justify-center rounded-md font-medium text-sm transition-colors duration-150 ease-in-out focus-visible:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[var(--theme-bg-card)] focus:ring-[var(--theme-accent-primary)] bg-indigo-100 text-[var(--theme-accent-primary)] hover:bg-indigo-200/80">
+      📤 上传 CSV
+    </button>
+    <button 
+      (click)="suggestionsModal().open()" 
+      [disabled]="!databaseService.hasSelectedColumns()"
+      class="w-full h-10 px-5 flex items-center justify-center rounded-md font-medium text-sm transition-colors duration-150 ease-in-out focus-visible:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[var(--theme-bg-card)] focus:ring-[var(--theme-accent-secondary-on-container)] bg-[var(--theme-accent-secondary-container)] text-[var(--theme-accent-secondary-on-container)] hover:bg-emerald-200/80 disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed"
+      >
+      ✨ AI 建议...
+    </button>
+
+    @if(databaseService.hasSelectedColumns()) {
+      <div class="text-center animate-fade-in">
+        <button (click)="databaseService.clearSelectedColumns()" class="text-xs text-[var(--theme-text-secondary)] hover:text-[var(--theme-accent-primary)]">
+          清空选择 ({{ databaseService.selectedColumns().length }})
+        </button>
+      </div>
+    }
   </div>
 
-  <div class="flex-grow overflow-y-auto -mr-2 pr-2">
-      @if(databaseService.dbStatus() === 'ready') {
-          @if (databaseService.tables().length > 0) {
-            <!-- PGLite Sample Tables -->
-            @if (databaseService.tablesByCategory().pglite.length > 0) {
-              <div class="mb-4">
-                <h4 class="px-2 text-xs font-semibold uppercase text-[var(--theme-text-secondary)]/70">PGLite 示例</h4>
-                <ul class="space-y-1 mt-1">
-                  @for(table of databaseService.tablesByCategory().pglite; track table.name) {
-                    <li>
-                      <div class="w-full flex items-center justify-between text-left px-2 py-2 rounded-md hover:bg-gray-100 text-sm font-sans text-[var(--theme-text-primary)]">
-                        <div class="flex items-center gap-2 flex-grow overflow-hidden">
-                          <input type="checkbox"
-                                [id]="'table-cb-' + table.name"
-                                [checked]="getTableSelectionState(table.name) === 'all'"
-                                [indeterminate]="getTableSelectionState(table.name) === 'some'"
-                                (change)="handleTableSelection(table.name)"
-                                title="选择/取消选择此表中的所有列"
-                                class="h-4 w-4 rounded text-[var(--theme-accent-primary)] focus:ring-[var(--theme-accent-primary)] border-[var(--theme-border)] bg-transparent cursor-pointer accent-[var(--theme-accent-primary)]"
-                          >
-                          <label [for]="'table-cb-' + table.name" (click)="previewTable(table.name, $event)" class="truncate cursor-pointer hover:underline" [title]="'查询 ' + table.name">{{ table.name }}</label>
-                        </div>
-                        <button (click)="toggleTable(table.name)" class="w-7 h-7 flex items-center justify-center rounded-md transition-colors duration-150 ease-in-out text-[var(--theme-text-secondary)] hover:bg-gray-200 flex-shrink-0 -mr-1" title="展开/折叠列">
-                          <span class="transition-transform text-xs" [class.rotate-90]="expandedTables().has(table.name)">▶</span>
-                        </button>
-                      </div>
-                      @if (expandedTables().has(table.name)) {
-                        <ul class="pl-4 mt-1 space-y-1">
-                          @for(column of table.schema; track column.sanitizedName) {
-                            <li class="px-2 py-1.5 text-xs text-[var(--theme-text-secondary)] bg-gray-50 rounded-md font-mono flex justify-between items-center">
-                              <label class="flex items-center gap-2 cursor-pointer w-full">
-                                <input type="checkbox" 
-                                      [checked]="databaseService.isSelected(table.name, column.originalName)" 
-                                      (change)="handleColumnSelection(table.name, column)" 
-                                      class="h-4 w-4 rounded text-[var(--theme-accent-primary)] focus:ring-[var(--theme-accent-primary)] border-[var(--theme-border)] bg-transparent cursor-pointer accent-[var(--theme-accent-primary)]"
-                                >
-                                <span class="truncate" [title]="column.sanitizedName">{{ column.sanitizedName }}</span>
-                              </label>
-                              <span class="text-white bg-gray-400 px-1.5 py-0.5 text-[10px] rounded-md font-sans font-bold flex-shrink-0">{{ column.sqlType }}</span>
+  <div class="flex-grow overflow-y-auto px-4 pb-4 space-y-4">
+    @if (databaseService.isLoading()) {
+      <div class="flex items-center justify-center h-full">
+        <div class="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin text-[var(--theme-accent-primary)]"></div>
+        <p class="ml-2 text-sm text-[var(--theme-text-secondary)]">正在加载...</p>
+      </div>
+    } @else if (databaseService.tables().length === 0) {
+      <p class="text-center text-sm text-[var(--theme-text-secondary)] p-4">没有可用的表。请上传一个 CSV 文件开始。</p>
+    } @else {
+      @if (databaseService.tablesByCategory()['pglite'].length > 0) {
+        <div class="space-y-2">
+            <h4 class="text-xs font-bold uppercase text-[var(--theme-text-secondary)] tracking-wider">示例数据</h4>
+            @for (table of databaseService.tablesByCategory()['pglite']; track table.name) {
+                <details class="group" open>
+                    <summary class="flex items-center gap-2 p-2 rounded-md hover:bg-gray-100 cursor-pointer list-none">
+                        <input type="checkbox" class="h-4 w-4 focus:ring-offset-0 focus:ring-2 accent-[var(--theme-accent-primary)] border-[var(--theme-border)] rounded"
+                          [checked]="getTableSelectionState(table.name) === 'all'"
+                          [indeterminate]="getTableSelectionState(table.name) === 'some'"
+                          (click)="$event.stopPropagation(); toggleTable(table.name)">
+                        <span class="font-medium text-sm text-[var(--theme-text-primary)] flex-grow">{{ table.name }}</span>
+                        <span class="text-[var(--theme-text-secondary)] transition-transform duration-200 group-open:rotate-90">▶</span>
+                    </summary>
+                    <ul class="pl-6 pt-1 space-y-1">
+                        @for (column of table.schema; track column.originalName) {
+                            <li class="flex items-center gap-2 p-1 rounded-md hover:bg-gray-50">
+                                <input type="checkbox" [checked]="isSelected(table.name, column.originalName)" (change)="toggleColumn(table.name, column)" class="h-4 w-4 focus:ring-offset-0 focus:ring-2 accent-[var(--theme-accent-primary)] border-[var(--theme-border)] rounded">
+                                <label class="flex-grow text-sm text-[var(--theme-text-secondary)] cursor-pointer" (click)="toggleColumn(table.name, column)">
+                                    {{ column.originalName }} <span class="text-xs text-gray-400">({{ column.sqlType }})</span>
+                                </label>
                             </li>
-                          }
-                        </ul>
-                      }
-                    </li>
-                  }
-                </ul>
-              </div>
+                        }
+                    </ul>
+                </details>
             }
-
-            <!-- Uploaded/User Tables -->
-            @if (databaseService.tablesByCategory().uploaded.length > 0) {
-              <div class="mb-4">
-                <h4 class="px-2 text-xs font-semibold uppercase text-[var(--theme-text-secondary)]/70">已上传与用户创建</h4>
-                <ul class="space-y-1 mt-1">
-                  @for(table of databaseService.tablesByCategory().uploaded; track table.name) {
-                    <li>
-                      <div class="w-full flex items-center justify-between text-left px-2 py-2 rounded-md hover:bg-gray-100 text-sm font-sans text-[var(--theme-text-primary)]">
-                        <div class="flex items-center gap-2 flex-grow overflow-hidden">
-                          <input type="checkbox"
-                                [id]="'table-cb-' + table.name"
-                                [checked]="getTableSelectionState(table.name) === 'all'"
-                                [indeterminate]="getTableSelectionState(table.name) === 'some'"
-                                (change)="handleTableSelection(table.name)"
-                                title="选择/取消选择此表中的所有列"
-                                class="h-4 w-4 rounded text-[var(--theme-accent-primary)] focus:ring-[var(--theme-accent-primary)] border-[var(--theme-border)] bg-transparent cursor-pointer accent-[var(--theme-accent-primary)]"
-                          >
-                          <label [for]="'table-cb-' + table.name" (click)="previewTable(table.name, $event)" class="truncate cursor-pointer hover:underline" [title]="'查询 ' + table.name">{{ table.name }}</label>
-                        </div>
-                        <button (click)="toggleTable(table.name)" class="w-7 h-7 flex items-center justify-center rounded-md transition-colors duration-150 ease-in-out text-[var(--theme-text-secondary)] hover:bg-gray-200 flex-shrink-0 -mr-1" title="展开/折叠列">
-                          <span class="transition-transform text-xs" [class.rotate-90]="expandedTables().has(table.name)">▶</span>
-                        </button>
-                      </div>
-                      @if (expandedTables().has(table.name)) {
-                        <ul class="pl-4 mt-1 space-y-1">
-                          @for(column of table.schema; track column.sanitizedName) {
-                            <li class="px-2 py-1.5 text-xs text-[var(--theme-text-secondary)] bg-gray-50 rounded-md font-mono flex justify-between items-center">
-                              <label class="flex items-center gap-2 cursor-pointer w-full">
-                                <input type="checkbox" 
-                                      [checked]="databaseService.isSelected(table.name, column.originalName)" 
-                                      (change)="handleColumnSelection(table.name, column)" 
-                                      class="h-4 w-4 rounded text-[var(--theme-accent-primary)] focus:ring-[var(--theme-accent-primary)] border-[var(--theme-border)] bg-transparent cursor-pointer accent-[var(--theme-accent-primary)]"
-                                >
-                                <span class="truncate" [title]="column.sanitizedName">{{ column.sanitizedName }}</span>
-                              </label>
-                              <span class="text-white bg-gray-400 px-1.5 py-0.5 text-[10px] rounded-md font-sans font-bold flex-shrink-0">{{ column.sqlType }}</span>
-                            </li>
-                          }
-                        </ul>
-                      }
-                    </li>
-                  }
-                </ul>
-              </div>
-            }
-
-          } @else if (!databaseService.isLoading()) {
-              <p class="px-3 text-xs text-[var(--theme-text-secondary)]">没有可用的表。</p>
-          }
+        </div>
       }
+
+      @if (databaseService.tablesByCategory()['uploaded'].length > 0) {
+        <div class="space-y-2">
+            <h4 class="text-xs font-bold uppercase text-[var(--theme-text-secondary)] tracking-wider">已上传</h4>
+            @for (table of databaseService.tablesByCategory()['uploaded']; track table.name) {
+                <details class="group" open>
+                    <summary class="flex items-center gap-2 p-2 rounded-md hover:bg-gray-100 cursor-pointer list-none">
+                        <input type="checkbox" class="h-4 w-4 focus:ring-offset-0 focus:ring-2 accent-[var(--theme-accent-primary)] border-[var(--theme-border)] rounded"
+                          [checked]="getTableSelectionState(table.name) === 'all'"
+                          [indeterminate]="getTableSelectionState(table.name) === 'some'"
+                          (click)="$event.stopPropagation(); toggleTable(table.name)">
+                        <span class="font-medium text-sm text-[var(--theme-text-primary)] flex-grow">{{ table.name }}</span>
+                        <span class="text-[var(--theme-text-secondary)] transition-transform duration-200 group-open:rotate-90">▶</span>
+                    </summary>
+                    <ul class="pl-6 pt-1 space-y-1">
+                        @for (column of table.schema; track column.originalName) {
+                            <li class="flex items-center gap-2 p-1 rounded-md hover:bg-gray-50">
+                                <input type="checkbox" [checked]="isSelected(table.name, column.originalName)" (change)="toggleColumn(table.name, column)" class="h-4 w-4 focus:ring-offset-0 focus:ring-2 accent-[var(--theme-accent-primary)] border-[var(--theme-border)] rounded">
+                                <label class="flex-grow text-sm text-[var(--theme-text-secondary)] cursor-pointer" (click)="toggleColumn(table.name, column)">
+                                    {{ column.originalName }} <span class="text-xs text-gray-400">({{ column.sqlType }})</span>
+                                </label>
+                            </li>
+                        }
+                    </ul>
+                </details>
+            }
+        </div>
+      }
+    }
   </div>
-  <app-file-upload-modal #modalInstance />
-  <app-sql-suggestions-modal #suggestionsModalInstance />
+
+  <app-file-upload-modal></app-file-upload-modal>
+  <app-sql-suggestions-modal></app-sql-suggestions-modal>
 </div>

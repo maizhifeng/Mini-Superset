@@ -63,6 +63,17 @@
       animation: fade-in-down 0.3s ease-out forwards;
     }
   </style>
+<script>
+  // Polyfill process for browser environment to avoid "process is not defined" error.
+  // The execution environment is expected to inject the actual API_KEY.
+  if (typeof window.process === 'undefined') {
+    window.process = {
+      env: {
+        API_KEY: '' 
+      }
+    };
+  }
+</script>
 <script type="importmap">
 {
   "imports": {
@@ -72,13 +83,13 @@
     "rxjs/webSocket": "https://aistudiocdn.com/rxjs@^7.8.2/webSocket?conditions=es2015",
     "rxjs/testing": "https://aistudiocdn.com/rxjs@^7.8.2/testing?conditions=es2015",
     "rxjs/fetch": "https://aistudiocdn.com/rxjs@^7.8.2/fetch?conditions=es2015",
-    "@angular/platform-browser": "https://next.esm.sh/@angular/platform-browser@^20.3.1?external=rxjs",
-    "@angular/compiler": "https://next.esm.sh/@angular/compiler@^20.3.1?external=rxjs",
-    "@angular/core": "https://next.esm.sh/@angular/core@^20.3.1?external=rxjs",
-    "@angular/forms": "https://next.esm.sh/@angular/forms@^20.3.1?external=rxjs",
+    "@angular/platform-browser": "https://esm.sh/@angular/platform-browser@^20.3.1?external=rxjs",
+    "@angular/compiler": "https://esm.sh/@angular/compiler@^20.3.1?external=rxjs",
+    "@angular/core": "https://esm.sh/@angular/core@^20.3.1?external=rxjs",
+    "@angular/forms": "https://esm.sh/@angular/forms@^20.3.1?external=rxjs",
     "@electric-sql/pglite": "https://cdn.jsdelivr.net/npm/@electric-sql/pglite/dist/index.js",
-    "@angular/common": "https://next.esm.sh/@angular/common@^20.3.1?external=rxjs",
-    "@google/genai": "https://next.esm.sh/@google/genai@^1.20.0?external=rxjs"
+    "@angular/common": "https://esm.sh/@angular/common@^20.3.1?external=rxjs",
+    "@google/genai": "https://esm.sh/@google/genai@1.20.0?target=browser&external=rxjs"
   }
 }
 </script>

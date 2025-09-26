@@ -1,6 +1,5 @@
 import { Component, ChangeDetectionStrategy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DatabaseExplorerComponent } from '../database-explorer/database-explorer.component';
 import { DashboardService, KpiCardData } from '../../services/dashboard.service';
 import { ChartComponent } from '../chart/chart.component';
 
@@ -9,7 +8,7 @@ import { ChartComponent } from '../chart/chart.component';
   templateUrl: './dashboard.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [CommonModule, DatabaseExplorerComponent, ChartComponent],
+  imports: [CommonModule, ChartComponent],
 })
 export class DashboardComponent {
   dashboardService = inject(DashboardService);
