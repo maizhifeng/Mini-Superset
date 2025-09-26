@@ -1,4 +1,5 @@
-import { Component, ChangeDetectionStrategy, signal, effect, viewChild, ElementRef, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, effect, viewChild, ElementRef, inject, computed } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DatabaseService } from '../../services/database.service';
 import { DatabaseExplorerComponent } from '../database-explorer/database-explorer.component';
@@ -23,24 +24,24 @@ const SQL_KEYWORDS = [
 
 const MATERIAL_CHART_PALETTE = {
   backgrounds: [
-    'rgba(63, 81, 181, 0.6)',  // Indigo 500
-    'rgba(244, 67, 54, 0.6)',  // Red 500
-    'rgba(76, 175, 80, 0.6)',  // Green 500
-    'rgba(255, 193, 7, 0.6)',  // Amber 500
-    'rgba(156, 39, 176, 0.6)', // Purple 500
-    'rgba(3, 169, 244, 0.6)',  // Light Blue 500
-    'rgba(255, 87, 34, 0.6)',  // Deep Orange 500
-    'rgba(0, 150, 136, 0.6)',  // Teal 500
+    'rgba(79, 70, 229, 0.6)',   // Indigo 600
+    'rgba(16, 185, 129, 0.6)',  // Emerald 500
+    'rgba(217, 70, 239, 0.6)',  // Fuchsia 500
+    'rgba(249, 115, 22, 0.6)',  // Orange 500
+    'rgba(14, 165, 233, 0.6)',  // Sky 500
+    'rgba(139, 92, 246, 0.6)',  // Violet 500
+    'rgba(236, 72, 153, 0.6)',  // Pink 500
+    'rgba(20, 184, 166, 0.6)',  // Teal 500
   ],
   borders: [
-    'rgb(63, 81, 181)',
-    'rgb(244, 67, 54)',
-    'rgb(76, 175, 80)',
-    'rgb(255, 193, 7)',
-    'rgb(156, 39, 176)',
-    'rgb(3, 169, 244)',
-    'rgb(255, 87, 34)',
-    'rgb(0, 150, 136)',
+    'rgb(79, 70, 229)',
+    'rgb(16, 185, 129)',
+    'rgb(217, 70, 239)',
+    'rgb(249, 115, 22)',
+    'rgb(14, 165, 233)',
+    'rgb(139, 92, 246)',
+    'rgb(236, 72, 153)',
+    'rgb(20, 184, 166)',
   ],
 };
 
@@ -50,7 +51,10 @@ const MATERIAL_CHART_PALETTE = {
   templateUrl: './sql-lab.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [FormsModule, DatabaseExplorerComponent],
+  imports: [FormsModule, DatabaseExplorerComponent, CommonModule],
+  host: {
+    '(paste)': 'onPaste($event)',
+  },
 })
 export class SqlLabComponent {
   databaseService = inject(DatabaseService);
@@ -65,15 +69,47 @@ export class SqlLabComponent {
   queryError = signal<string | null>(null);
   isQueryRunning = signal(false);
 
+  summaryRow = computed(() => {
+    const results = this.queryResults();
+    const headers = this.queryResultHeaders();
+
+    if (!results || results.length < 2 || headers.length === 0) {
+      return null;
+    }
+
+    const summary: Record<string, string | number> = {};
+
+    for (const header of headers) {
+      const columnValues = results.map(row => row[header]);
+      
+      const firstNonNullValue = columnValues.find(v => v !== null && v !== undefined);
+
+      if (typeof firstNonNullValue === 'number') {
+        // Numerical data: sum
+        const sum = columnValues.reduce((acc, val) => {
+          const num = Number(val);
+          return acc + (isNaN(num) ? 0 : num);
+        }, 0);
+        summary[header] = sum;
+      } else {
+        // Categorical/other data: unique count
+        const uniqueValues = new Set(columnValues.filter(v => v !== null && v !== undefined)).size;
+        summary[header] = `${uniqueValues} unique`;
+      }
+    }
+
+    return summary;
+  });
+
   // 编辑器模式
-  editorMode = signal<'sql' | 'n2l'>('sql');
+  editorMode = signal<'sql' | 'n2l' | 'ai-insight' | 'image-to-table'>('sql');
   naturalLanguageQuery = signal<string>('');
 
   // 结果/图表视图状态
   activeTab = signal<'results' | 'chart'>('results');
   
   // Chart signals
-  chartCanvas = viewChild<ElementRef<HTMLCanvasElement>>('chartCanvas');
+  chartCanvas = viewChild<ElementRef<HTMLDivElement>>('chartCanvas');
   chartType = signal<'bar' | 'pie' | 'line'>('bar');
   labelColumn = signal<string | null>(null);
   dataColumn = signal<string | null>(null);
@@ -87,115 +123,170 @@ export class SqlLabComponent {
   // Reference to the textarea element
   queryTextarea = viewChild<ElementRef<HTMLTextAreaElement>>('queryTextarea');
 
+  // AI Insight state
+  aiInsight = signal<string | null>(null);
+  isAnalyzing = signal(false);
+  aiInsightPrompt = signal<string>('');
+  formattedAiInsight = computed(() => {
+    const text = this.aiInsight();
+    if (!text) return '';
+    
+    // Convert markdown-like lists and bolding to HTML
+    return text
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/^\s*[\-\*]\s(.*)$/gm, '<li>$1</li>')
+      .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
+      .replace(/\n/g, '<br>');
+  });
+
+  // Image to Table state
+  uploadedImage = signal<string | null>(null);
+  imageFile = signal<File | null>(null);
+
   constructor() {
-    // 这个 effect 使用 onCleanup 来安全地管理图表的生命周期，防止崩溃。
     effect((onCleanup) => {
-      const canvas = this.chartCanvas();
+      const chartDiv = this.chartCanvas();
       const results = this.queryResults();
       const isConfigValid = this.isChartConfigValid();
       const activeTab = this.activeTab();
 
-      // 当所有条件都满足时，渲染图表。
-      if (activeTab === 'chart' && canvas && results && results.length > 0 && isConfigValid) {
+      if (activeTab === 'chart' && chartDiv && results && results.length > 0 && isConfigValid) {
         const chartType = this.chartType();
         const labelCol = this.labelColumn()!;
         const dataCol = this.dataColumn()!;
-        
-        const labels = results.map(row => row[labelCol]);
-        const data = results.map(row => row[dataCol]);
-        
-        const datasetConfig: any = {
-          label: `${dataCol} by ${labelCol}`,
-          data: data,
-          backgroundColor: MATERIAL_CHART_PALETTE.backgrounds,
-          borderColor: MATERIAL_CHART_PALETTE.borders,
-          borderWidth: 1.5,
-          hoverBorderWidth: 2.5,
-          hoverBorderColor: MATERIAL_CHART_PALETTE.borders,
-        };
-        
-        if (chartType === 'line') {
-          datasetConfig.tension = 0.4;
-          datasetConfig.pointRadius = 5;
-          datasetConfig.pointHoverRadius = 7;
-          datasetConfig.pointBackgroundColor = MATERIAL_CHART_PALETTE.borders;
-          datasetConfig.pointBorderColor = '#fff';
-          datasetConfig.pointHoverBackgroundColor = MATERIAL_CHART_PALETTE.borders;
-          datasetConfig.pointHoverBorderColor = '#fff';
-        }
-        
-        const chart = new (window as any).Chart(canvas.nativeElement, {
-          type: chartType,
-          data: {
-            labels: labels,
-            datasets: [datasetConfig]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                position: 'top',
-                labels: {
-                  color: 'var(--md-sys-color-on-surface-variant)',
-                  font: {
-                    family: "'Roboto', sans-serif",
-                    size: 14,
-                    weight: '500'
-                  }
+
+        const labels = results.map(row => String(row[labelCol]));
+        const data = results.map(row => Number(row[dataCol]));
+
+        const ec = (window as any).echarts;
+        const chart = ec.init(chartDiv.nativeElement, null, { renderer: 'svg' });
+
+        let option: any;
+
+        if (chartType === 'pie') {
+          option = {
+            backgroundColor: 'transparent',
+            tooltip: {
+              trigger: 'item',
+              backgroundColor: 'var(--theme-bg-sidebar)',
+              borderColor: 'var(--theme-sidebar-hover)',
+              borderWidth: 1,
+              textStyle: {
+                color: 'var(--theme-text-on-dark)',
+              },
+            },
+            legend: {
+              orient: 'vertical',
+              left: 'left',
+              textStyle: {
+                color: 'var(--theme-text-secondary)',
+              },
+            },
+            series: [{
+              name: dataCol,
+              type: 'pie',
+              radius: ['40%', '70%'],
+              avoidLabelOverlap: false,
+              itemStyle: {
+                borderRadius: 10,
+                borderColor: 'var(--theme-bg-card)',
+                borderWidth: 2
+              },
+              label: {
+                show: false,
+                position: 'center'
+              },
+              emphasis: {
+                label: {
+                    show: true,
+                    fontSize: 20,
+                    fontWeight: 'bold'
                 }
               },
-              title: {
-                display: false,
+              labelLine: {
+                show: false
               },
-              tooltip: {
-                backgroundColor: 'var(--md-sys-color-surface-bright)',
-                titleColor: 'var(--md-sys-color-on-surface)',
-                bodyColor: 'var(--md-sys-color-on-surface-variant)',
-                borderColor: 'var(--md-sys-color-outline-variant)',
-                borderWidth: 1,
-                padding: 10,
-                cornerRadius: 8,
-                boxPadding: 4,
+              data: labels.map((name, i) => ({ value: data[i], name })),
+            }],
+          };
+        } else { // bar or line
+          option = {
+            backgroundColor: 'transparent',
+            tooltip: {
+              trigger: 'axis',
+              backgroundColor: 'var(--theme-bg-sidebar)',
+              borderColor: 'var(--theme-sidebar-hover)',
+              borderWidth: 1,
+              textStyle: {
+                color: 'var(--theme-text-on-dark)',
+              },
+              axisPointer: {
+                type: 'shadow'
               }
             },
-            scales: {
-              y: {
-                display: chartType !== 'pie',
-                ticks: {
-                  color: 'var(--md-sys-color-on-surface-variant)',
-                  font: {
-                    family: "'Roboto', sans-serif",
-                    size: 12,
-                  }
+            grid: {
+              left: '3%',
+              right: '4%',
+              bottom: '3%',
+              containLabel: true,
+            },
+            xAxis: {
+              type: 'category',
+              data: labels,
+              axisLine: {
+                lineStyle: {
+                  color: 'var(--theme-border)',
                 },
-                grid: {
-                  color: 'var(--md-sys-color-outline-variant)',
-                  borderDash: [4, 4],
-                  display: chartType !== 'pie'
-                }
               },
-              x: {
-                display: chartType !== 'pie',
-                ticks: {
-                  color: 'var(--md-sys-color-on-surface-variant)',
-                  font: {
-                    family: "'Roboto', sans-serif",
-                    size: 12,
-                  }
+              axisLabel: {
+                color: 'var(--theme-text-secondary)',
+              },
+            },
+            yAxis: {
+              type: 'value',
+              axisLine: {
+                show: true,
+                lineStyle: {
+                  color: 'var(--theme-border)',
                 },
-                grid: {
-                  color: 'var(--md-sys-color-outline-variant)',
-                  borderDash: [4, 4],
-                  display: chartType !== 'pie'
+              },
+              axisLabel: {
+                color: 'var(--theme-text-secondary)',
+              },
+              splitLine: {
+                lineStyle: {
+                  color: 'var(--theme-border)',
+                  type: 'dashed'
                 }
               }
+            },
+            series: [{
+              name: dataCol,
+              type: chartType,
+              data: data,
+              smooth: chartType === 'line',
+              itemStyle: {
+                borderRadius: chartType === 'bar' ? [5, 5, 0, 0] : undefined
+              },
+            }],
+          };
+        }
+        
+        option.color = MATERIAL_CHART_PALETTE.borders;
+        chart.setOption(option);
+        
+        const resizeObserver = new ResizeObserver(() => {
+          setTimeout(() => {
+            if (!chart.isDisposed()) {
+              chart.resize();
             }
-          }
+          });
         });
+        resizeObserver.observe(chartDiv.nativeElement);
 
         onCleanup(() => {
-          chart.destroy();
+          resizeObserver.disconnect();
+          chart.dispose();
         });
       }
     });
@@ -204,7 +295,7 @@ export class SqlLabComponent {
       this.isChartConfigValid.set(!!(this.labelColumn() && this.dataColumn()));
     });
 
-    // New effect for AI suggestions
+    // Effect for AI suggestions
     effect(() => {
       const suggested = this.databaseService.suggestedQuery();
       if (suggested) {
@@ -212,6 +303,17 @@ export class SqlLabComponent {
         // Automatically run the query for the user
         this.runQuery();
         this.databaseService.suggestedQuery.set(null); // Reset after use
+      }
+    });
+    
+    // New effect for dashboard drill-down
+    effect(() => {
+      const drillDown = this.databaseService.drillDownQuery();
+      if (drillDown) {
+        this.query.set(drillDown);
+        this.runQuery();
+        this.databaseService.drillDownQuery.set(null); // Reset after use
+        this.notificationService.show('🔍 已下钻数据！新查询已运行。');
       }
     });
   }
@@ -267,6 +369,8 @@ export class SqlLabComponent {
     }
     this.isQueryRunning.set(true);
     this.queryError.set(null);
+    this.aiInsight.set(null); // Reset AI insight on new query run
+
     try {
       const results = await this.databaseService.runQuery(this.query());
       
@@ -298,6 +402,51 @@ export class SqlLabComponent {
     } finally {
       this.isQueryRunning.set(false);
     }
+  }
+
+  async getAiInsight(): Promise<void> {
+    const results = this.queryResults();
+    const headers = this.queryResultHeaders();
+
+    if (!results || results.length === 0 || !headers || headers.length === 0) {
+      this.notificationService.show('❌ 没有可供分析的数据。');
+      return;
+    }
+    
+    this.aiInsight.set(null); // Clear previous insight before fetching new one
+    
+    const insight = await this.aiService.generateInsightsFromData(results, headers, this.aiInsightPrompt());
+    
+    if (insight) {
+      this.aiInsight.set(insight);
+    } else {
+      // The service will show a more specific error, but we can show a generic one here.
+      this.notificationService.show('❌ 生成 AI 洞察失败。');
+    }
+  }
+
+  async runAndAnalyze(): Promise<void> {
+    if (this.databaseService.dbStatus() !== 'ready') {
+      this.notificationService.show('数据库尚未准备好。');
+      return;
+    }
+    
+    this.isAnalyzing.set(true);
+    this.aiInsight.set(null); // Clear previous results immediately for better UX
+    
+    // First, run the query.
+    await this.runQuery();
+    
+    // If the query was successful and returned results, analyze them.
+    if (!this.queryError() && this.queryResults() && this.queryResults()!.length > 0) {
+      await this.getAiInsight();
+    } else if (!this.queryError()) {
+      // Query ran but returned no results, so can't analyze.
+      this.notificationService.show('查询未返回任何数据可供分析。');
+    }
+    // If there was a query error, runQuery already handled it.
+    
+    this.isAnalyzing.set(false);
   }
 
   onQueryKeydown(event: KeyboardEvent): boolean | void {
@@ -435,5 +584,118 @@ export class SqlLabComponent {
   
   closeSuggestions(): void {
     this.isSuggestionsOpen.set(false);
+  }
+
+  copyResultsToClipboard(): void {
+    const headers = this.queryResultHeaders();
+    const results = this.queryResults();
+
+    if (!results || results.length === 0 || headers.length === 0) {
+      this.notificationService.show('📋 没有可复制的结果。');
+      return;
+    }
+
+    const headerString = headers.join('\t');
+    const rowsString = results.map(row => 
+      headers.map(header => {
+        const value = row[header];
+        if (value === null || value === undefined) {
+          return '';
+        }
+        // 基本的 TSV 清理：从值中移除换行符和制表符。
+        return String(value).replace(/[\n\t]/g, ' ');
+      }).join('\t')
+    ).join('\n');
+
+    const clipboardText = `${headerString}\n${rowsString}`;
+
+    navigator.clipboard.writeText(clipboardText)
+      .then(() => {
+        this.notificationService.show('📋 所有结果已复制到剪贴板！');
+      })
+      .catch(err => {
+        console.error('无法复制结果：', err);
+        this.notificationService.show('❌ 复制失败。请检查浏览器权限。');
+      });
+  }
+
+  onImageUpload(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      this.handleImageFile(input.files[0]);
+    }
+  }
+  
+  onPaste(event: ClipboardEvent): void {
+    if (this.editorMode() !== 'image-to-table') {
+      return;
+    }
+  
+    const items = event.clipboardData?.items;
+    if (!items) {
+      return;
+    }
+  
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.type.startsWith('image/')) {
+        const file = item.getAsFile();
+        if (file) {
+          event.preventDefault();
+          this.handleImageFile(file);
+          this.notificationService.show('📋 图片已粘贴！');
+          return; // Handle the first image found and exit.
+        }
+      }
+    }
+  }
+
+  private handleImageFile(file: File): void {
+    if (file.size > 10 * 1024 * 1024) { // 10MB limit
+      this.notificationService.show('❌ 文件过大。请上传小于 10MB 的图片。');
+      return;
+    }
+    this.imageFile.set(file);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      this.uploadedImage.set(e.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  }
+  
+  async processImage(): Promise<void> {
+    const file = this.imageFile();
+    const imageBase64DataUrl = this.uploadedImage();
+    if (!file || !imageBase64DataUrl) {
+      this.notificationService.show('❌ 请先上传图片。');
+      return;
+    }
+  
+    const imageBase64 = imageBase64DataUrl.split(',')[1];
+    
+    const csvData = await this.aiService.generateTableFromImage(imageBase64, file.type);
+    
+    if (csvData) {
+      this.notificationService.show('✅ 成功识别表格数据！正在创建新表...');
+      // Sanitize filename to create a valid table name
+      const tableName = file.name.replace(/\.[^/.]+$/, "").replace(/[^a-zA-Z0-9_]/g, '_');
+      await this.databaseService.processAndLoadData(csvData, `${tableName}.csv`, 'uploaded');
+
+      if (!this.databaseService.error()) {
+        const finalTableName = this.databaseService.tables().find(t => t.name.startsWith(tableName.toLowerCase()))?.name;
+        this.notificationService.show(`🚀 表 "${finalTableName}" 已创建！`);
+        this.editorMode.set('sql');
+        this.uploadedImage.set(null);
+        this.imageFile.set(null);
+        if (finalTableName) {
+          this.query.set(`SELECT * FROM "${finalTableName}" LIMIT 100;`);
+          this.runQuery();
+        }
+      } else {
+          this.notificationService.show('❌ 创建表时出错。');
+      }
+    } else {
+      this.notificationService.show('❌ 无法从图片中提取表格数据。');
+    }
   }
 }

@@ -3,44 +3,44 @@
 <!-- 模态框背景遮罩层，点击可关闭模态框 -->
 <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in" (click)="close()">
   <!-- 模态框容器，阻止点击事件冒泡到遮罩层 -->
-  <div class="bg-[var(--md-sys-color-surface-container-high)] rounded-2xl shadow-xl w-full max-w-2xl p-6 m-4 flex flex-col max-h-[90vh] animate-fade-in-short" (click)="$event.stopPropagation()">
+  <div class="bg-[var(--theme-bg-card)] rounded-lg shadow-xl w-full max-w-2xl p-6 m-4 flex flex-col max-h-[90vh] animate-fade-in-short" (click)="$event.stopPropagation()">
     <!-- 模态框头部 -->
     <div class="flex justify-between items-center mb-4 flex-shrink-0">
-      <h3 class="text-xl font-medium text-[var(--md-sys-color-on-surface)]">✨ AI SQL 建议</h3>
-      <button (click)="close()" class="w-10 h-10 flex items-center justify-center rounded-full transition-colors duration-150 ease-in-out focus-visible:outline-none text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-on-surface-variant)]/10 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--md-sys-color-surface-container-high)] focus-visible:ring-[var(--md-sys-color-on-surface-variant)] active:bg-[var(--md-sys-color-on-surface-variant)]/20">&times;</button>
+      <h3 class="text-xl font-medium text-[var(--theme-text-primary)]">✨ AI SQL 建议</h3>
+      <button (click)="close()" class="w-8 h-8 flex items-center justify-center rounded-full transition-colors text-[var(--theme-text-secondary)] hover:bg-gray-100">&times;</button>
     </div>
 
     <!-- 模态框内容区域，可滚动 -->
-    <div class="flex-grow overflow-y-auto pr-2">
+    <div class="flex-grow overflow-y-auto pr-2 -mr-2">
       <!-- 状态一：初始加载中（正在等待第一个建议） -->
       @if(aiService.isLoading() && aiService.suggestions().length === 0) {
         <div class="flex flex-col items-center justify-center h-full">
-          <div class="w-8 h-8 border-4 border-[var(--md-sys-color-primary)] border-t-transparent rounded-full animate-spin"></div>
-          <p class="mt-4 text-[var(--md-sys-color-on-surface-variant)]">正在生成建议，请稍候...</p>
+          <div class="w-8 h-8 border-4 border-[var(--theme-accent-primary)] border-t-transparent rounded-full animate-spin"></div>
+          <p class="mt-4 text-[var(--theme-text-secondary)]">正在生成建议，请稍候...</p>
         </div>
       <!-- 状态二：发生错误 -->
       } @else if (aiService.error()) {
-        <div class="p-4 text-sm text-[var(--md-sys-color-on-error-container)] bg-[var(--md-sys-color-error-container)] rounded-lg">
+        <div class="p-4 text-sm text-red-800 bg-red-100 border border-red-200 rounded-lg">
           <strong>错误:</strong> {{ aiService.error() }}
         </div>
       <!-- 状态三：显示建议列表 -->
       } @else {
         <div class="space-y-4">
           <!-- 循环渲染从 AI 服务流式接收到的每个建议 -->
-          @for (suggestion of aiService.suggestions(); track $index) {
-            <div class="bg-[var(--md-sys-color-surface-container)] border border-[var(--md-sys-color-outline-variant)] rounded-lg p-4 animate-fade-in-short">
-              <p class="text-sm text-[var(--md-sys-color-on-surface-variant)] mb-2 font-sans">
+          @for (suggestion of aiService.suggestions(); track suggestion) {
+            <div class="bg-gray-50 border border-[var(--theme-border)] rounded-lg p-4 animate-fade-in-short">
+              <p class="text-sm text-[var(--theme-text-secondary)] mb-2 font-sans">
                 💡 {{ suggestion.description }}
                 @if(!suggestion.query && !suggestion.isComplete) {
-                  <span class="inline-block w-2 h-4 bg-[var(--md-sys-color-on-surface-variant)] animate-pulse ml-1 align-middle"></span>
+                  <span class="inline-block w-2 h-4 bg-[var(--theme-text-secondary)] animate-pulse ml-1 align-middle"></span>
                 }
               </p>
               @if(suggestion.query || suggestion.isComplete) {
-                <pre class="whitespace-pre-wrap break-words font-mono text-sm text-[var(--md-sys-color-on-surface)] bg-[var(--md-sys-color-surface-bright)] ring-1 ring-inset ring-[var(--md-sys-color-outline-variant)] p-3 rounded-lg"><code>{{ suggestion.query }}@if(!suggestion.isComplete){<span class="inline-block w-2 h-4 bg-[var(--md-sys-color-on-surface)] animate-pulse ml-1 align-middle"></span>}</code></pre>
+                <pre class="whitespace-pre-wrap break-words font-mono text-sm text-[var(--theme-text-primary)] bg-[var(--theme-bg-card)] ring-1 ring-inset ring-[var(--theme-border)] p-3 rounded-lg"><code>{{ suggestion.query }}@if(!suggestion.isComplete){<span class="inline-block w-2 h-4 bg-[var(--theme-text-primary)] animate-pulse ml-1 align-middle"></span>}</code></pre>
               }
               <div class="mt-3 text-right">
                 @if(suggestion.isComplete) {
-                  <button (click)="selectQuery(suggestion)" class="h-10 px-6 flex items-center justify-center rounded-full font-medium text-sm transition-all duration-150 ease-in-out focus-visible:outline-none bg-[var(--md-sys-color-secondary-container)] text-[var(--md-sys-color-on-secondary-container)] hover:shadow-md focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--md-sys-color-surface-container)] focus-visible:ring-[var(--md-sys-color-secondary)] active:shadow-none disabled:shadow-none disabled:bg-[var(--md-sys-color-on-surface)]/12 disabled:text-[var(--md-sys-color-on-surface)]/38 disabled:cursor-not-allowed">
+                  <button (click)="selectQuery(suggestion)" class="h-10 px-5 flex items-center justify-center rounded-md font-medium text-sm transition-colors duration-150 ease-in-out focus-visible:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[var(--theme-bg-card)] focus:ring-[var(--theme-accent-primary)] bg-indigo-100 text-[var(--theme-accent-primary)] hover:bg-indigo-200/80">
                     使用此查询
                   </button>
                 }
@@ -49,7 +49,7 @@
           }
           <!-- 如果建议列表为空且已停止加载，则显示空状态消息 -->
           @if(aiService.suggestions().length === 0 && !aiService.isLoading()) {
-            <p class="text-center text-[var(--md-sys-color-on-surface-variant)] mt-8">未能生成任何建议。请尝试不同的列选择。</p>
+            <p class="text-center text-[var(--theme-text-secondary)] mt-8">未能生成任何建议。请尝试不同的列选择。</p>
           }
         </div>
       }
@@ -57,7 +57,7 @@
 
     <!-- 模态框脚部 -->
     <div class="mt-6 flex justify-end space-x-3 flex-shrink-0">
-      <button (click)="close()" type="button" class="h-10 px-6 flex items-center justify-center rounded-full font-medium text-sm transition-colors duration-150 ease-in-out focus-visible:outline-none border border-[var(--md-sys-color-outline)] text-[var(--md-sys-color-primary)] hover:bg-[var(--md-sys-color-primary)]/10 focus-visible:border-[var(--md-sys-color-primary)] focus-visible:ring-2 focus-visible:ring-[var(--md-sys-color-primary)]/30 active:bg-[var(--md-sys-color-primary)]/20 disabled:border-[var(--md-sys-color-on-surface)]/12 disabled:text-[var(--md-sys-color-on-surface)]/38 disabled:hover:bg-transparent disabled:cursor-not-allowed">
+      <button (click)="close()" type="button" class="h-10 px-5 flex items-center justify-center rounded-md font-medium text-sm transition-colors duration-150 ease-in-out focus-visible:outline-none border border-[var(--theme-border)] text-[var(--theme-text-secondary)] hover:bg-gray-100 focus:ring-2 focus:ring-gray-400 focus:ring-offset-2">
         关闭
       </button>
     </div>

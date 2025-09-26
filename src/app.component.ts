@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, signal, inject } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, inject, effect } from '@angular/core';
 import { SqlLabComponent } from './components/sql-lab/sql-lab.component';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { DatabaseService } from './services/database.service';
@@ -16,6 +16,15 @@ export class AppComponent {
 
   activeView = signal<'sql-lab' | 'dashboard'>('sql-lab');
   isSidebarOpen = signal(true);
+
+  constructor() {
+    // Effect to handle navigation when a drill-down is requested from the dashboard.
+    effect(() => {
+      if (this.databaseService.drillDownQuery()) {
+        this.setView('sql-lab');
+      }
+    });
+  }
 
   setView(view: 'sql-lab' | 'dashboard'): void {
     this.activeView.set(view);

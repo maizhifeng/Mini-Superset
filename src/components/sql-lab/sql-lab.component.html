@@ -1,61 +1,188 @@
 <div class="flex h-full gap-6">
   <!-- Left Panel: Database Explorer -->
-  <div class="w-1/3 lg:w-1/4 flex-shrink-0">
+  <div class="w-1/4 lg:w-1/5 flex-shrink-0">
      <app-database-explorer></app-database-explorer>
   </div>
 
   <!-- Right Panel: Editor and Results -->
-  <div class="w-2/3 lg:w-3/4 flex flex-col h-full space-y-4">
+  <div class="w-3/4 lg:w-4/5 flex flex-col h-full space-y-4">
     <!-- Top Panel: SQL Editor -->
-    <div class="flex-shrink-0 bg-[var(--md-sys-color-surface-container)] p-4 rounded-2xl border border-[var(--md-sys-color-outline-variant)]">
+    <div class="flex-shrink-0 bg-[var(--theme-bg-card)] p-4 rounded-lg border border-[var(--theme-border)] shadow-sm">
       <!-- Editor Tabs & Actions -->
-      <div class="flex justify-between items-center border-b border-[var(--md-sys-color-outline-variant)] mb-4">
+      <div class="flex justify-between items-center border-b border-[var(--theme-border)] mb-4">
         <div class="flex space-x-2">
           <button (click)="editorMode.set('sql')"
-                  class="px-4 py-2 text-sm font-medium rounded-full transition-colors"
-                  [class.bg-[var(--md-sys-color-primary-container)]]="editorMode() === 'sql'"
-                  [class.text-[var(--md-sys-color-on-primary-container)]]="editorMode() === 'sql'"
-                  [class.text-[var(--md-sys-color-on-surface-variant)]]="editorMode() !== 'sql'"
-                  [class.hover:bg-[var(--md-sys-color-surface-container-high)]]="editorMode() !== 'sql'">
+                  class="px-4 py-2 text-sm font-medium rounded-md transition-colors"
+                  [class.bg-indigo-100]="editorMode() === 'sql'"
+                  [class.text-[var(--theme-accent-primary)]]="editorMode() === 'sql'"
+                  [class.text-[var(--theme-text-secondary)]]="editorMode() !== 'sql'"
+                  [class.hover:bg-gray-100]="editorMode() !== 'sql'">
             ✏️ SQL 编辑器
           </button>
           <button (click)="editorMode.set('n2l')"
-                  class="px-4 py-2 text-sm font-medium rounded-full transition-colors"
-                  [class.bg-[var(--md-sys-color-primary-container)]]="editorMode() === 'n2l'"
-                  [class.text-[var(--md-sys-color-on-primary-container)]]="editorMode() === 'n2l'"
-                  [class.text-[var(--md-sys-color-on-surface-variant)]]="editorMode() !== 'n2l'"
-                  [class.hover:bg-[var(--md-sys-color-surface-container-high)]]="editorMode() !== 'n2l'">
+                  class="px-4 py-2 text-sm font-medium rounded-md transition-colors"
+                  [class.bg-indigo-100]="editorMode() === 'n2l'"
+                  [class.text-[var(--theme-accent-primary)]]="editorMode() === 'n2l'"
+                  [class.text-[var(--theme-text-secondary)]]="editorMode() !== 'n2l'"
+                  [class.hover:bg-gray-100]="editorMode() !== 'n2l'">
             💬 自然语言查询 (N2L)
+          </button>
+          <button (click)="editorMode.set('image-to-table')"
+                  class="px-4 py-2 text-sm font-medium rounded-md transition-colors"
+                  [class.bg-indigo-100]="editorMode() === 'image-to-table'"
+                  [class.text-[var(--theme-accent-primary)]]="editorMode() === 'image-to-table'"
+                  [class.text-[var(--theme-text-secondary)]]="editorMode() !== 'image-to-table'"
+                  [class.hover:bg-gray-100]="editorMode() !== 'image-to-table'">
+            🖼️ 图像转表格
+          </button>
+          <button (click)="editorMode.set('ai-insight')"
+                  class="px-4 py-2 text-sm font-medium rounded-md transition-colors"
+                  [class.bg-indigo-100]="editorMode() === 'ai-insight'"
+                  [class.text-[var(--theme-accent-primary)]]="editorMode() === 'ai-insight'"
+                  [class.text-[var(--theme-text-secondary)]]="editorMode() !== 'ai-insight'"
+                  [class.hover:bg-gray-100]="editorMode() !== 'ai-insight'">
+            🤖 AI 洞察
           </button>
         </div>
         
         <div>
-          @if (editorMode() === 'sql') {
-            <button (click)="runQuery()" class="min-w-[120px] h-10 px-6 flex items-center justify-center rounded-full font-medium text-sm transition-all duration-150 ease-in-out focus-visible:outline-none bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-md hover:shadow-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--md-sys-color-primary)] active:shadow-sm disabled:shadow-none disabled:bg-[var(--md-sys-color-on-surface)]/12 disabled:text-[var(--md-sys-color-on-surface)]/38 disabled:cursor-not-allowed" [disabled]="databaseService.dbStatus() !== 'ready' || isQueryRunning()">
-              @if(isQueryRunning()) {
-                <div class="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-              } @else {
-                <span>▶️ 运行查询</span>
-              }
-            </button>
-          } @else if (editorMode() === 'n2l') {
-            <button (click)="generateSql()" [disabled]="!databaseService.hasSelectedColumns() || aiService.isLoading()" class="min-w-[120px] h-10 px-6 flex items-center justify-center rounded-full font-medium text-sm transition-all duration-150 ease-in-out focus-visible:outline-none bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-md hover:shadow-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--md-sys-color-primary)] active:shadow-sm disabled:shadow-none disabled:bg-[var(--md-sys-color-on-surface)]/12 disabled:text-[var(--md-sys-color-on-surface)]/38 disabled:cursor-not-allowed">
-              @if(aiService.isLoading()) {
-                <div class="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
-                <span class="ml-2">正在生成</span>
-              } @else {
-                <span>⚙️ 生成 SQL</span>
-              }
-            </button>
+          @switch (editorMode()) {
+            @case ('sql') {
+              <button (click)="runQuery()" class="min-w-[120px] h-10 px-5 flex items-center justify-center rounded-md font-medium text-sm transition-colors duration-150 ease-in-out focus-visible:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--theme-accent-primary)] bg-[var(--theme-accent-primary)] text-[var(--theme-accent-primary-on)] hover:bg-[var(--theme-accent-primary-hover)] disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed" [disabled]="databaseService.dbStatus() !== 'ready' || isQueryRunning()">
+                @if(isQueryRunning()) {
+                  <div class="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                } @else {
+                  <span>▶️ 运行查询</span>
+                }
+              </button>
+            }
+            @case ('n2l') {
+              <button (click)="generateSql()" [disabled]="!databaseService.hasSelectedColumns() || aiService.isLoading()" class="min-w-[120px] h-10 px-5 flex items-center justify-center rounded-md font-medium text-sm transition-colors duration-150 ease-in-out focus-visible:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--theme-accent-primary)] bg-[var(--theme-accent-primary)] text-[var(--theme-accent-primary-on)] hover:bg-[var(--theme-accent-primary-hover)] disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed">
+                @if(aiService.isLoading()) {
+                  <div class="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                  <span class="ml-2">正在生成</span>
+                } @else {
+                  <span>⚙️ 生成 SQL</span>
+                }
+              </button>
+            }
+            @case('image-to-table') {
+                <button (click)="processImage()" [disabled]="!uploadedImage() || aiService.isLoading()" class="min-w-[150px] h-10 px-5 flex items-center justify-center rounded-md font-medium text-sm transition-colors duration-150 ease-in-out focus-visible:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--theme-accent-primary)] bg-[var(--theme-accent-primary)] text-[var(--theme-accent-primary-on)] hover:bg-[var(--theme-accent-primary-hover)] disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed">
+                  @if(aiService.isLoading()) {
+                    <div class="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                    <span class="ml-2">正在识别...</span>
+                  } @else {
+                    <span>🤖 识别并创建表</span>
+                  }
+                </button>
+            }
+            @case ('ai-insight') {
+              <button (click)="runAndAnalyze()" [disabled]="isAnalyzing() || databaseService.dbStatus() !== 'ready'" class="min-w-[140px] h-10 px-5 flex items-center justify-center rounded-md font-medium text-sm transition-colors duration-150 ease-in-out focus-visible:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--theme-accent-secondary-on-container)] bg-[var(--theme-accent-secondary-container)] text-[var(--theme-accent-secondary-on-container)] hover:bg-emerald-200/80 disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed">
+                @if(isAnalyzing()) {
+                  <div class="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                  <span class="ml-2">正在运行并分析...</span>
+                } @else {
+                  <span>🚀 运行并分析</span>
+                }
+              </button>
+            }
           }
         </div>
       </div>
 
+      <!-- N2L View Container -->
+      @if (editorMode() === 'n2l') {
+        <div class="mb-4 animate-fade-in-short">
+           <div class="relative">
+              <textarea id="n2l-textarea"
+                        [(ngModel)]="naturalLanguageQuery"
+                        rows="4"
+                        class="w-full p-3 font-sans text-sm border border-[var(--theme-border)] rounded-md bg-gray-50 focus:ring-2 focus:ring-[var(--theme-accent-primary)] focus:border-[var(--theme-accent-primary)] outline-none resize-y"
+                        placeholder="例如：按地区显示总销售额和平均利润"
+                        autocorrect="off"
+                        autocapitalize="off"
+                        spellcheck="false"></textarea>
+            </div>
+          @if(!databaseService.hasSelectedColumns()) {
+            <p class="text-xs text-red-700 bg-red-50 p-2 rounded-md mt-2">
+                ⚠️ 请先从左侧的数据库浏览器中选择至少一列。
+            </p>
+          }
+        </div>
+      }
 
-      <!-- SQL View Container -->
-      <div [hidden]="editorMode() !== 'sql'">
+      <!-- Image to Table View Container -->
+      @if (editorMode() === 'image-to-table') {
+        <div class="animate-fade-in-short min-h-[220px]">
+          <p class="text-sm text-[var(--theme-text-secondary)] mb-3">上传包含表格数据的图片（例如截图）。AI 将会识别内容并将其转换为数据库中的新表。</p>
+          <div class="flex items-start gap-4">
+            <div class="flex-grow">
+              <label for="image-upload" class="relative cursor-pointer w-full flex flex-col items-center justify-center h-48 border-2 border-[var(--theme-border)] border-dashed rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                @if(uploadedImage()) {
+                  <img [src]="uploadedImage()" alt="Uploaded preview" class="max-h-full max-w-full object-contain rounded-md p-1">
+                } @else {
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 9.75L12 3m0 0l9 6.75M12 3v18" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 14.25l9 6.75m0 0l9-6.75M12 21V3" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 14.25l-9 6.75m0 0l-9-6.75m18 0l-9-6.75m9 6.75V3" />
+                  </svg>
+
+                  <span class="mt-2 text-sm text-[var(--theme-text-secondary)]">点击、拖拽或粘贴图片到这里</span>
+                  <span class="text-xs text-gray-500">PNG, JPG, WEBP, GIF (最大 10MB)</span>
+                }
+                <input id="image-upload" name="image-upload" type="file" class="sr-only" accept="image/png, image/jpeg, image/gif, image/webp" (change)="onImageUpload($event)">
+              </label>
+            </div>
+            @if(uploadedImage()) {
+              <div class="flex-shrink-0 w-1/3 p-3 bg-indigo-50/70 border border-indigo-200 rounded-lg text-xs text-indigo-900 leading-relaxed">
+                <strong>提示:</strong>
+                <ul class="list-disc list-inside mt-1 space-y-1">
+                  <li>确保图片清晰，表格结构明显。</li>
+                  <li>AI 会尽力推断列名和数据类型。</li>
+                  <li>处理完成后，将自动创建一个新表，您可以立即在 SQL 编辑器中查询。</li>
+                </ul>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Editor / Insight Area -->
+      @if(editorMode() === 'ai-insight') {
+        <!-- AI Insight Content, replacing the textarea -->
+        <div class="min-h-[144px] flex flex-col"> <!-- Matched height to textarea -->
+          <div class="flex flex-col h-full">
+            <p class="text-sm text-[var(--theme-text-secondary)]">
+              AI 将运行当前 SQL 查询，然后结合您的可选提示词，分析结果并总结关键洞察。
+            </p>
+            <div class="mt-2">
+              <textarea [(ngModel)]="aiInsightPrompt"
+                        rows="2"
+                        class="w-full p-3 font-sans text-sm border border-[var(--theme-border)] rounded-md bg-gray-50 focus:ring-2 focus:ring-[var(--theme-accent-primary)] focus:border-[var(--theme-accent-primary)] outline-none resize-y"
+                        placeholder="（可选）输入您关心的具体问题，例如：哪个地区的利润率最高？"></textarea>
+            </div>
+
+            @if (isAnalyzing() && !aiInsight()) {
+              <div class="mt-4 p-4 bg-gray-50 border border-[var(--theme-border)] rounded-lg space-y-3 animate-pulse">
+                <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                <div class="h-4 bg-gray-200 rounded w-5/6"></div>
+                <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+              </div>
+            }
+
+            @if (formattedAiInsight()) {
+              <div class="mt-4 p-4 bg-indigo-50/70 border border-indigo-200 rounded-lg text-sm text-indigo-900 leading-relaxed prose prose-sm prose-indigo max-w-none animate-fade-in-short" [innerHTML]="formattedAiInsight()">
+              </div>
+            } @else if (!isAnalyzing()) {
+              <div class="flex-grow flex items-center justify-center text-center text-sm text-[var(--theme-text-secondary)] mt-2">
+                <p>点击 "运行并分析" 按钮开始。</p>
+              </div>
+            }
+          </div>
+        </div>
+      } @else if (editorMode() === 'sql') {
+        <!-- SQL Editor Textarea -->
         <div class="relative">
-           <label for="sql-editor-textarea" class="absolute -top-2.5 left-3 px-1 text-xs bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface-variant)]">SQL 编辑器</label>
           <textarea #queryTextarea
                     id="sql-editor-textarea"
                     [(ngModel)]="query" 
@@ -63,19 +190,20 @@
                     (keydown)="onQueryKeydown($event)"
                     (blur)="closeSuggestions()"
                     rows="6" 
-                    class="w-full pt-5 pb-3 px-4 font-mono text-sm border border-[var(--md-sys-color-outline)] rounded-lg bg-transparent focus:ring-1 focus:ring-[var(--md-sys-color-primary)] focus:border-[var(--md-sys-color-primary)] outline-none resize-y" 
+                    class="w-full p-3 font-mono text-sm border border-[var(--theme-border)] rounded-md bg-gray-50 focus:ring-2 focus:ring-[var(--theme-accent-primary)] focus:border-[var(--theme-accent-primary)] outline-none resize-y transition-opacity" 
                     placeholder="-- 例如：SELECT * FROM sales_data LIMIT 100;"
                     autocomplete="off"
                     autocorrect="off"
                     autocapitalize="off"
-                    spellcheck="false"></textarea>
+                    spellcheck="false"
+                    ></textarea>
           @if(isSuggestionsOpen()) {
-            <div class="absolute z-10 w-72 bg-[var(--md-sys-color-surface-bright)] border border-[var(--md-sys-color-outline-variant)] rounded-md shadow-lg mt-1 left-0 top-full">
+            <div class="absolute z-10 w-72 bg-[var(--theme-bg-card)] border border-[var(--theme-border)] rounded-md shadow-lg mt-1 left-0 top-full">
               <ul class="py-1 max-h-60 overflow-y-auto">
                 @for(suggestion of suggestions(); track suggestion.text + suggestion.type; let i = $index) {
                   <li (mousedown)="applySuggestion(suggestion)" 
-                      class="px-3 py-1.5 text-sm cursor-pointer hover:bg-[var(--md-sys-color-surface-container-high)] flex items-center gap-2"
-                      [class.bg-[var(--md-sys-color-surface-container-high)]]="activeSuggestionIndex() === i">
+                      class="px-3 py-1.5 text-sm cursor-pointer hover:bg-gray-100 flex items-center gap-2"
+                      [class.bg-gray-100]="activeSuggestionIndex() === i">
                     <span class="w-5 text-center">
                       @switch(suggestion.type) {
                         @case('keyword') { <span title="关键字">🔑</span> }
@@ -92,99 +220,87 @@
             </div>
           }
         </div>
-      </div>
-
-      <!-- N2L View Container -->
-      <div [hidden]="editorMode() !== 'n2l'">
-         <div class="relative">
-            <label for="n2l-textarea" class="absolute -top-2.5 left-3 px-1 text-xs bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface-variant)]">查询描述</label>
-            <textarea id="n2l-textarea"
-                      [(ngModel)]="naturalLanguageQuery"
-                      rows="6"
-                      class="w-full pt-5 pb-3 px-4 font-sans text-sm border border-[var(--md-sys-color-outline)] rounded-lg bg-transparent focus:ring-1 focus:ring-[var(--md-sys-color-primary)] focus:border-[var(--md-sys-color-primary)] outline-none resize-y"
-                      placeholder="例如：按地区显示总销售额和平均利润"
-                      autocorrect="off"
-                      autocapitalize="off"
-                      spellcheck="false"></textarea>
-          </div>
-        @if(!databaseService.hasSelectedColumns()) {
-          <p class="text-xs text-[var(--md-sys-color-on-error-container)] p-2 rounded-md mt-2">
-              ⚠️ 请先从左侧的数据库浏览器中选择至少一列。
-          </p>
-        }
-      </div>
+      }
     </div>
 
     <!-- Bottom Panel: Results & Chart -->
-    <div class="flex-1 flex flex-col min-h-0 bg-[var(--md-sys-color-surface-container)] p-4 rounded-2xl border border-[var(--md-sys-color-outline-variant)]">
-      <div class="flex-shrink-0 flex justify-between items-center border-b border-[var(--md-sys-color-outline-variant)] mb-4">
+    <div class="flex-1 flex flex-col min-h-0 bg-[var(--theme-bg-card)] p-4 rounded-lg border border-[var(--theme-border)] shadow-sm">
+      <div class="flex-shrink-0 flex justify-between items-center border-b border-[var(--theme-border)] mb-4">
         <nav class="flex space-x-2">
           <button 
             (click)="activeTab.set('results')"
-            class="px-4 py-2 text-sm font-medium rounded-full transition-colors"
-            [class.bg-[var(--md-sys-color-secondary-container)]]="activeTab() === 'results'"
-            [class.text-[var(--md-sys-color-on-secondary-container)]]="activeTab() === 'results'"
-            [class.text-[var(--md-sys-color-on-surface-variant)]]="activeTab() !== 'results'"
-            [class.hover:bg-[var(--md-sys-color-surface-container-high)]]="activeTab() !== 'results'"
+            class="px-4 py-2 text-sm font-medium rounded-md transition-colors"
+            [class.bg-indigo-100]="activeTab() === 'results'"
+            [class.text-[var(--theme-accent-primary)]]="activeTab() === 'results'"
+            [class.text-[var(--theme-text-secondary)]]="activeTab() !== 'results'"
+            [class.hover:bg-gray-100]="activeTab() !== 'results'"
           >
             结果
           </button>
           <button 
             (click)="activeTab.set('chart')"
-            class="px-4 py-2 text-sm font-medium rounded-full transition-colors"
-            [class.bg-[var(--md-sys-color-secondary-container)]]="activeTab() === 'chart'"
-            [class.text-[var(--md-sys-color-on-secondary-container)]]="activeTab() === 'chart'"
-            [class.text-[var(--md-sys-color-on-surface-variant)]]="activeTab() !== 'chart'"
-            [class.hover:bg-[var(--md-sys-color-surface-container-high)]]="activeTab() !== 'chart'"
+            class="px-4 py-2 text-sm font-medium rounded-md transition-colors"
+            [class.bg-indigo-100]="activeTab() === 'chart'"
+            [class.text-[var(--theme-accent-primary)]]="activeTab() === 'chart'"
+            [class.text-[var(--theme-text-secondary)]]="activeTab() !== 'chart'"
+            [class.hover:bg-gray-100]="activeTab() !== 'chart'"
           >
             图表
           </button>
         </nav>
 
+        @if(activeTab() === 'results' && queryResults() && queryResults()!.length > 0) {
+          <div class="flex items-center justify-end gap-4 animate-fade-in">
+            <button (click)="copyResultsToClipboard()" title="复制所有结果" class="h-10 px-5 flex items-center justify-center rounded-md font-medium text-sm transition-colors duration-150 ease-in-out focus-visible:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--theme-accent-primary)] bg-indigo-100 text-[var(--theme-accent-primary)] hover:bg-indigo-200/80">
+              <span>📋 复制所有结果</span>
+            </button>
+          </div>
+        }
+
         @if(activeTab() === 'chart' && queryResults() && queryResults()!.length > 0) {
           <div class="flex items-center justify-end gap-4 animate-fade-in">
-              <div class="flex items-end gap-4">
+              <div class="flex items-center gap-4">
                 <div class="relative">
-                    <label class="absolute -top-2 left-3 px-1 text-xs bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface-variant)]">图表类型</label>
+                    <label class="text-xs text-[var(--theme-text-secondary)] mb-1 block">图表类型</label>
                     <div class="relative">
-                      <select [(ngModel)]="chartType" class="w-full bg-transparent border border-[var(--md-sys-color-outline)] rounded-lg pl-3 pr-8 py-2.5 text-sm focus:ring-1 focus:ring-[var(--md-sys-color-primary)] focus:border-[var(--md-sys-color-primary)] outline-none appearance-none">
+                      <select [(ngModel)]="chartType" class="w-full bg-transparent border border-[var(--theme-border)] rounded-md pl-3 pr-8 py-2 text-sm focus:ring-2 focus:ring-[var(--theme-accent-primary)] focus:border-[var(--theme-accent-primary)] outline-none appearance-none">
                           <option value="bar">柱状图</option>
                           <option value="pie">饼图</option>
                           <option value="line">折线图</option>
                       </select>
-                      <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-[var(--md-sys-color-on-surface-variant)]">
+                      <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-[var(--theme-text-secondary)]">
                           <span>▾</span>
                       </div>
                     </div>
                 </div>
                 <div class="relative">
-                    <label class="absolute -top-2 left-3 px-1 text-xs bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface-variant)]">标签列</label>
+                    <label class="text-xs text-[var(--theme-text-secondary)] mb-1 block">标签列</label>
                     <div class="relative">
-                      <select [(ngModel)]="labelColumn" class="w-full bg-transparent border border-[var(--md-sys-color-outline)] rounded-lg pl-3 pr-8 py-2.5 text-sm focus:ring-1 focus:ring-[var(--md-sys-color-primary)] focus:border-[var(--md-sys-color-primary)] outline-none appearance-none">
+                      <select [(ngModel)]="labelColumn" class="w-full bg-transparent border border-[var(--theme-border)] rounded-md pl-3 pr-8 py-2 text-sm focus:ring-2 focus:ring-[var(--theme-accent-primary)] focus:border-[var(--theme-accent-primary)] outline-none appearance-none">
                           @for (header of queryResultHeaders(); track header) {
                               <option [value]="header">{{ header }}</option>
                           }
                       </select>
-                      <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-[var(--md-sys-color-on-surface-variant)]">
+                      <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-[var(--theme-text-secondary)]">
                           <span>▾</span>
                       </div>
                     </div>
                 </div>
                 <div class="relative">
-                    <label class="absolute -top-2 left-3 px-1 text-xs bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface-variant)]">数据列</label>
+                    <label class="text-xs text-[var(--theme-text-secondary)] mb-1 block">数据列</label>
                     <div class="relative">
-                      <select [(ngModel)]="dataColumn" class="w-full bg-transparent border border-[var(--md-sys-color-outline)] rounded-lg pl-3 pr-8 py-2.5 text-sm focus:ring-1 focus:ring-[var(--md-sys-color-primary)] focus:border-[var(--md-sys-color-primary)] outline-none appearance-none">
+                      <select [(ngModel)]="dataColumn" class="w-full bg-transparent border border-[var(--theme-border)] rounded-md pl-3 pr-8 py-2 text-sm focus:ring-2 focus:ring-[var(--theme-accent-primary)] focus:border-[var(--theme-accent-primary)] outline-none appearance-none">
                           @for (header of queryResultHeaders(); track header) {
                               <option [value]="header">{{ header }}</option>
                           }
                       </select>
-                       <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-[var(--md-sys-color-on-surface-variant)]">
+                       <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-[var(--theme-text-secondary)]">
                           <span>▾</span>
                       </div>
                     </div>
                 </div>
               </div>
-              <button (click)="pinChart()" [disabled]="!isChartConfigValid()" title="固定到仪表板" class="min-w-[120px] h-10 px-6 flex items-center justify-center rounded-full font-medium text-sm transition-all duration-150 ease-in-out focus-visible:outline-none bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-md hover:shadow-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--md-sys-color-surface-container-low)] focus-visible:ring-[var(--md-sys-color-primary)] active:shadow-sm disabled:shadow-none disabled:bg-[var(--md-sys-color-on-surface)]/12 disabled:text-[var(--md-sys-color-on-surface)]/38 disabled:cursor-not-allowed">
+              <button (click)="pinChart()" [disabled]="!isChartConfigValid()" title="固定到仪表板" class="self-end min-w-[100px] h-10 px-5 flex items-center justify-center rounded-md font-medium text-sm transition-colors duration-150 ease-in-out focus-visible:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--theme-accent-primary)] bg-[var(--theme-accent-primary)] text-[var(--theme-accent-primary-on)] hover:bg-[var(--theme-accent-primary-hover)] disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed">
                 <span>📌 固定</span>
               </button>
             </div>
@@ -193,7 +309,7 @@
 
       <div class="flex-1 min-h-0">
         @if (queryError()) {
-          <div class="p-4 text-sm text-[var(--md-sys-color-on-error-container)] bg-[var(--md-sys-color-error-container)] rounded-lg">
+          <div class="p-4 text-sm text-red-800 bg-red-100 border border-red-200 rounded-lg">
             <strong>查询错误:</strong> {{ queryError() }}
           </div>
         }
@@ -201,51 +317,68 @@
         @switch (activeTab()) {
           @case ('results') {
             @if (queryResults(); as results) {
-              <div class="h-full overflow-auto">
-                  @if (queryResultHeaders().length > 0) {
-                      <table class="min-w-full divide-y divide-[var(--md-sys-color-outline-variant)]">
-                          <thead class="bg-[var(--md-sys-color-surface-container-low)] sticky top-0">
-                              <tr>
-                                  @for (header of queryResultHeaders(); track header) {
-                                      <th scope="col" class="px-6 py-3 text-left text-sm font-medium text-[var(--md-sys-color-on-surface-variant)] tracking-wider">{{ header }}</th>
+              <div class="flex flex-col h-full">
+                  <div class="flex-grow overflow-auto">
+                    @if (queryResultHeaders().length > 0) {
+                        <table class="min-w-full divide-y divide-[var(--theme-border)]">
+                            <thead class="bg-gray-50 sticky top-0 z-10">
+                                <tr>
+                                    @for (header of queryResultHeaders(); track header) {
+                                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-[var(--theme-text-secondary)] uppercase tracking-wider">{{ header }}</th>
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-[var(--theme-border)]">
+                                @for (row of results; track $index) {
+                                    <tr class="hover:bg-gray-50">
+                                        @for (header of queryResultHeaders(); track header) {
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-[var(--theme-text-secondary)]">{{ row[header] }}</td>
+                                        }
+                                    </tr>
+                                }
+                            </tbody>
+                            @if(summaryRow(); as summary) {
+                              <tfoot class="bg-gray-100 sticky bottom-0 z-10">
+                                <tr>
+                                  @for(header of queryResultHeaders(); track header) {
+                                    <td class="px-6 py-3 text-left text-sm font-bold text-[var(--theme-text-primary)] border-t-2 border-[var(--theme-border)]">
+                                        @if(typeof summary[header] === 'number') {
+                                          {{ summary[header] | number }}
+                                        } @else {
+                                          {{ summary[header] }}
+                                        }
+                                    </td>
                                   }
-                              </tr>
-                          </thead>
-                          <tbody class="divide-y divide-[var(--md-sys-color-outline-variant)]">
-                              @for (row of results; track $index) {
-                                  <tr class="odd:bg-[var(--md-sys-color-surface-container-low)] even:bg-[var(--md-sys-color-surface-bright)] hover:bg-[var(--md-sys-color-surface-container-high)]">
-                                      @for (header of queryResultHeaders(); track header) {
-                                          <td class="px-6 py-4 whitespace-nowrap text-base text-[var(--md-sys-color-on-surface-variant)]">{{ row[header] }}</td>
-                                      }
-                                  </tr>
-                              }
-                          </tbody>
-                      </table>
-                      @if(results.length === 0) {
-                         <p class="text-center text-[var(--md-sys-color-on-surface-variant)] mt-8">查询成功，但未返回任何行。</p>
-                      }
-                  } @else {
-                      <p class="text-center text-[var(--md-sys-color-on-surface-variant)] mt-8">查询执行成功。</p>
-                  }
+                                </tr>
+                              </tfoot>
+                            }
+                        </table>
+                        @if(results.length === 0) {
+                           <p class="text-center text-[var(--theme-text-secondary)] mt-8">查询成功，但未返回任何行。</p>
+                        }
+                    } @else {
+                        <p class="text-center text-[var(--theme-text-secondary)] mt-8">查询执行成功。</p>
+                    }
+                </div>
               </div>
             } @else if (!queryError()) {
-              <p class="text-center text-[var(--md-sys-color-on-surface-variant)] mt-8">运行查询以查看结果。</p>
+              <p class="text-center text-[var(--theme-text-secondary)] mt-8">运行查询以查看结果。</p>
             }
           }
           @case ('chart') {
             @if (queryResults() && queryResults()!.length > 0) {
               <div class="flex flex-col h-full">
-                  <!-- Chart Canvas -->
+                  <!-- Chart Container -->
                   <div class="flex-1 relative min-h-0">
                       @if(isChartConfigValid()) {
-                        <canvas #chartCanvas></canvas>
+                        <div #chartCanvas class="w-full h-full"></div>
                       } @else {
-                          <div class="flex items-center justify-center h-full text-[var(--md-sys-color-on-surface-variant)]">请选择有效的标签和数据列来生成图表。</div>
+                          <div class="flex items-center justify-center h-full text-[var(--theme-text-secondary)]">请选择有效的标签和数据列来生成图表。</div>
                       }
                   </div>
               </div>
             } @else {
-              <p class="text-center text-[var(--md-sys-color-on-surface-variant)] mt-8">运行一个返回数据的查询以创建图表。</p>
+              <p class="text-center text-[var(--theme-text-secondary)] mt-8">运行一个返回数据的查询以创建图表。</p>
             }
           }
         }

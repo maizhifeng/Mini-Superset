@@ -5,59 +5,40 @@
   <title>迷你超集</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="icon" type="image/x-icon" href="favicon.ico" />
+  <!-- Add Google Fonts for Noto Sans SC -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
   <style>
-    /* Material 3 inspired theme for Tailwind */
+    /* New Figma-inspired theme */
     :root {
-      /* Primary Palette */
-      --md-sys-color-primary: #3F51B5;
-      --md-sys-color-on-primary: #FFFFFF;
-      --md-sys-color-primary-container: #DFE0FF;
-      --md-sys-color-on-primary-container: #00036A;
-
-      /* Secondary Palette */
-      --md-sys-color-secondary: #526070;
-      --md-sys-color-on-secondary: #FFFFFF;
-      --md-sys-color-secondary-container: #D5E4F7;
-      --md-sys-color-on-secondary-container: #0E1D2B;
-
-      /* Tertiary Palette */
-      --md-sys-color-tertiary: #006A6A;
-      --md-sys-color-on-tertiary: #FFFFFF;
-      --md-sys-color-tertiary-container: #9CF2F1;
-      --md-sys-color-on-tertiary-container: #002020;
-
-      /* Error Palette */
-      --md-sys-color-error: #B3261E;
-      --md-sys-color-on-error: #FFFFFF;
-      --md-sys-color-error-container: #F9DEDC;
-      --md-sys-color-on-error-container: #410E0B;
-
-      /* Background & Surface Palette */
-      --md-sys-color-background: #F5F5F5;
-      --md-sys-color-on-background: #1A1C1E;
-      --md-sys-color-surface: #FFFFFF;
-      --md-sys-color-on-surface: #1A1C1E;
-      --md-sys-color-surface-variant: #DFE2EB;
-      --md-sys-color-on-surface-variant: #43474E;
-
-      /* Outline Palette */
-      --md-sys-color-outline: #73777F;
-      --md-sys-color-outline-variant: #C3C7CF;
-
-      /* Surface Container Palette */
-      --md-sys-color-surface-container-lowest: #FFFFFF;
-      --md-sys-color-surface-container-low: #F0F0F0;
-      --md-sys-color-surface-container: #EBEBEB;
-      --md-sys-color-surface-container-high: #E0E0E0;
-      --md-sys-color-surface-container-highest: #D6D6D6;
-      --md-sys-color-surface-bright: #FAFAFA;
+      --theme-bg-sidebar: #1F2937; /* slate-800 */
+      --theme-bg-content: #F3F4F6; /* gray-100 */
+      --theme-bg-card: #FFFFFF;
+      --theme-text-primary: #111827; /* gray-900 */
+      --theme-text-secondary: #6B7280; /* gray-500 */
+      --theme-text-on-dark: #F9FAFB; /* gray-50 */
+      --theme-text-on-dark-secondary: #D1D5DB; /* gray-300 */
+      --theme-accent-primary: #4F46E5; /* indigo-600 */
+      --theme-accent-primary-hover: #4338CA; /* indigo-700 */
+      --theme-accent-primary-on: #FFFFFF;
+      --theme-accent-secondary-container: #D1FAE5; /* emerald-100 */
+      --theme-accent-secondary-on-container: #065F46; /* emerald-800 */
+      --theme-border: #E5E7EB; /* gray-200 */
+      --theme-sidebar-hover: #374151; /* gray-700 */
+      --theme-active-indicator: var(--theme-accent-primary);
+    }
+    html {
+        font-size: 17px; /* Increase base font size for better readability */
     }
     body {
-      font-family: 'Roboto', sans-serif;
-      background-color: var(--md-sys-color-background);
-      color: var(--md-sys-color-on-surface);
+      /* Change font to Noto Sans SC */
+      font-family: 'Noto Sans SC', sans-serif;
+      background-color: var(--theme-bg-content);
+      color: var(--theme-text-primary);
     }
     /* Custom Animations */
     @keyframes fade-in {
@@ -95,7 +76,6 @@
     "@angular/compiler": "https://next.esm.sh/@angular/compiler@^20.3.1?external=rxjs",
     "@angular/core": "https://next.esm.sh/@angular/core@^20.3.1?external=rxjs",
     "@angular/forms": "https://next.esm.sh/@angular/forms@^20.3.1?external=rxjs",
-    "chart.js": "https://next.esm.sh/chart.js@^4.5.0?external=rxjs",
     "@electric-sql/pglite": "https://cdn.jsdelivr.net/npm/@electric-sql/pglite/dist/index.js",
     "@angular/common": "https://next.esm.sh/@angular/common@^20.3.1?external=rxjs",
     "@google/genai": "https://next.esm.sh/@google/genai@^1.20.0?external=rxjs"

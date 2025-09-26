@@ -61,6 +61,7 @@ export class DatabaseService {
   selectedColumns = signal<SelectedColumn[]>([]);
   hasSelectedColumns = computed(() => this.selectedColumns().length > 0);
   suggestedQuery = signal<string | null>(null);
+  drillDownQuery = signal<string | null>(null);
 
   tableMetadata = signal<Map<string, { category: TableCategory }>>(new Map());
   tablesByCategory = computed(() => {
@@ -183,7 +184,15 @@ export class DatabaseService {
         return;
       }
       
-      const tableName = sourceName.replace(/\.csv$/i, '').replace(/[^a-zA-Z0-9_\u4e00-\u9fa5]/g, '_').toLowerCase();
+      const baseTableName = sourceName.replace(/\.csv$/i, '').replace(/[^a-zA-Z0-9_\u4e00-\u9fa5]/g, '_').toLowerCase() || 'uploaded_table';
+      
+      let tableName = baseTableName;
+      let counter = 1;
+      const existingTableNames = new Set(this.tables().map(t => t.name.toLowerCase()));
+      while (existingTableNames.has(tableName)) {
+        tableName = `${baseTableName}_${counter}`;
+        counter++;
+      }
       this.tableMetadata.update(meta => meta.set(tableName, { category }));
       
       const sampleRow = rows[0];
@@ -208,7 +217,7 @@ export class DatabaseService {
           const value = sampleRow[i];
           let type = 'TEXT';
           if (value && !isNaN(Number(value)) && value.trim() !== '') {
-              type = value.includes('.') ? 'REAL' : 'INTEGER';
+              type = 'REAL'; // 总是为数字类型使用 REAL 以支持浮点数。
           }
 
           newSchema.push({
@@ -220,7 +229,6 @@ export class DatabaseService {
           return `"${finalColName}" ${type}`;
       }).join(', ');
       
-      await db.query(`DROP TABLE IF EXISTS "${tableName}";`);
       await db.query(`CREATE TABLE "${tableName}" (${columnDefs});`);
 
       const colNames = newSchema.map(c => `"${c.sanitizedName}"`).join(', ');

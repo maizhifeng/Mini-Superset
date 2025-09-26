@@ -29,13 +29,15 @@ export class AiService {
             throw new Error("请至少选择一列以生成 SQL。");
         }
         
-        const groupedColumns = selectedColumns.reduce((acc, col) => {
-            if (!acc[col.tableName]) {
-                acc[col.tableName] = [];
+        // FIX: Replaced `reduce` with a `for...of` loop to fix a type inference error on `columns.join`.
+        // This approach is more robust and readable for grouping columns by table.
+        const groupedColumns: Record<string, string[]> = {};
+        for (const col of selectedColumns) {
+            if (!groupedColumns[col.tableName]) {
+                groupedColumns[col.tableName] = [];
             }
-            acc[col.tableName].push(`"${col.columnName}" (type: ${col.sqlType})`);
-            return acc;
-        }, {} as Record<string, string[]>);
+            groupedColumns[col.tableName].push(`"${col.columnName}" (type: ${col.sqlType})`);
+        }
 
         const formattedColumns = Object.entries(groupedColumns)
             .map(([tableName, columns]) => `- 表 "${tableName}": ${columns.join(', ')}`)
@@ -89,13 +91,15 @@ ${naturalLanguagePrompt}
     }
     
     // 按表对列进行分组
-    const groupedColumns = selectedColumns.reduce((acc, col) => {
-        if (!acc[col.tableName]) {
-            acc[col.tableName] = [];
+    // FIX: Replaced `reduce` with a `for...of` loop to fix a type inference error on `columns.join`.
+    // This approach is more robust and readable for grouping columns by table.
+    const groupedColumns: Record<string, string[]> = {};
+    for (const col of selectedColumns) {
+        if (!groupedColumns[col.tableName]) {
+            groupedColumns[col.tableName] = [];
         }
-        acc[col.tableName].push(`"${col.columnName}" (type: ${col.sqlType})`);
-        return acc;
-    }, {} as Record<string, string[]>);
+        groupedColumns[col.tableName].push(`"${col.columnName}" (type: ${col.sqlType})`);
+    }
 
     const formattedColumns = Object.entries(groupedColumns)
         .map(([tableName, columns]) => `- 表 "${tableName}": ${columns.join(', ')}`)
@@ -250,6 +254,114 @@ ORDER BY "total_sales" DESC;
             // 过滤掉任何可能存在的空建议
             return current.filter(s => (s.description && s.description.trim()) || (s.query && s.query.trim()));
         });
+    }
+  }
+
+  async generateInsightsFromData(results: any[], headers: string[], userPrompt?: string): Promise<string | null> {
+    this.isLoading.set(true);
+    this.error.set(null);
+
+    try {
+      if (results.length === 0 || headers.length === 0) {
+        throw new Error("无法从空数据中生成洞察。");
+      }
+
+      // Take a sample of the data to avoid sending too much information
+      const sampleData = results.slice(0, 50);
+      const dataAsJsonString = JSON.stringify(sampleData, null, 2);
+
+      let prompt = `你是一位专业的 SQL 数据分析师。你的任务是分析以 JSON 格式提供的数据样本，并以简洁、易于理解的自然语言总结出关键洞察。
+
+**规则:**
+1.  关注数据中的趋势、模式、异常值或有趣的关系。
+2.  你的回答应该是 2-3 个项目符号点 (例如, 使用 * 或 -)。
+3.  保持每个项目符号点简洁明了。
+4.  直接输出洞察，不要包含任何前言或解释。
+5.  使用中文进行回答。
+
+**数据样本 (JSON 格式):**
+\`\`\`json
+${dataAsJsonString}
+\`\`\`
+`;
+
+      if (userPrompt && userPrompt.trim()) {
+        prompt += `
+**用户附加问题:**
+${userPrompt}
+
+**基于数据和用户问题，请提供您的关键洞察:**
+`;
+      } else {
+        prompt += `
+**关键洞察:**
+`;
+      }
+
+      const response = await this.ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+      });
+
+      return response.text.trim();
+
+    } catch (err: any) {
+      console.error("AI insight generation error:", err);
+      const errorMessage = `生成 AI 洞察时出错: ${err.message || '未知错误'}`;
+      this.error.set(errorMessage);
+      // Also bubble up to the main error display
+      this.databaseService.error.set(errorMessage);
+      return null;
+    } finally {
+      this.isLoading.set(false);
+    }
+  }
+
+  async generateTableFromImage(imageBase64: string, mimeType: string): Promise<string | null> {
+    this.isLoading.set(true);
+    this.error.set(null);
+
+    try {
+      const imagePart = {
+        inlineData: {
+          data: imageBase64,
+          mimeType: mimeType,
+        },
+      };
+
+      const textPart = {
+        text: `分析此图片。图片中包含一个表格。
+**任务:** 将此表格转换为 CSV 格式。
+
+**规则:**
+1.  **第一行必须是标题行。** 尽力从图片中推断出有意义的列名。如果无法推断，请使用 "column_1", "column_2" 等。
+2.  确保 CSV 格式正确，使用逗号作为分隔符。
+3.  如果单元格中包含逗号，请用双引号将其括起来。
+4.  只输出原始的 CSV 文本。不要包含任何解释、markdown、代码块定界符 (\`\`\`csv) 或任何非 CSV 文本。`
+      };
+
+      const response = await this.ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: { parts: [imagePart, textPart] },
+      });
+
+      const csvText = response.text.trim();
+      const cleanedCsv = csvText.replace(/```csv|```/g, '').trim();
+
+      if (!cleanedCsv || cleanedCsv.split('\n').length < 1) {
+          throw new Error("AI未能返回有效的 CSV 数据。");
+      }
+
+      return cleanedCsv;
+
+    } catch (err: any) {
+      console.error("AI image to table error:", err);
+      const errorMessage = `从图片生成表格时出错: ${err.message || '未知错误'}`;
+      this.error.set(errorMessage);
+      this.databaseService.error.set(errorMessage);
+      return null;
+    } finally {
+      this.isLoading.set(false);
     }
   }
 }

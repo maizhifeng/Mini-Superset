@@ -1,10 +1,10 @@
-<div class="h-full bg-[var(--md-sys-color-surface-container)] p-4 rounded-2xl border border-[var(--md-sys-color-outline-variant)] flex flex-col">
-  <h3 class="text-lg font-medium text-[var(--md-sys-color-on-surface-variant)] mb-2 flex-shrink-0">🗂️ 数据库</h3>
+<div class="h-full bg-[var(--theme-bg-card)] p-4 rounded-lg border border-[var(--theme-border)] shadow-sm flex flex-col">
+  <h3 class="text-lg font-medium text-[var(--theme-text-secondary)] mb-4 flex-shrink-0">🗂️ 数据库</h3>
   
   <div class="mb-4 flex-shrink-0 flex flex-col gap-2">
      @switch(databaseService.dbStatus()) {
         @case('ready') {
-          <button (click)="uploadModal().open()" class="w-full h-10 px-6 flex items-center justify-center rounded-full font-medium text-sm transition-all duration-150 ease-in-out focus-visible:outline-none bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-md hover:shadow-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--md-sys-color-primary)] active:shadow-sm disabled:shadow-none disabled:bg-[var(--md-sys-color-on-surface)]/12 disabled:text-[var(--md-sys-color-on-surface)]/38 disabled:cursor-not-allowed" [disabled]="databaseService.isLoading()">
+          <button (click)="uploadModal().open()" class="w-full h-10 px-5 flex items-center justify-center rounded-md font-medium text-sm transition-colors duration-150 ease-in-out focus-visible:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--theme-accent-primary)] bg-[var(--theme-accent-primary)] text-[var(--theme-accent-primary-on)] hover:bg-[var(--theme-accent-primary-hover)] disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed" [disabled]="databaseService.isLoading()">
             @if(databaseService.isLoading()) {
               <span>正在加载...</span>
             } @else {
@@ -14,38 +14,38 @@
           
           <!-- AI Suggestions Button -->
           @if (databaseService.hasSelectedColumns()) {
-            <button (click)="getAiSuggestions()" class="w-full h-10 px-6 flex items-center justify-center rounded-full font-medium text-sm transition-all duration-150 ease-in-out focus-visible:outline-none bg-[var(--md-sys-color-tertiary-container)] text-[var(--md-sys-color-on-tertiary-container)] hover:shadow-md focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--md-sys-color-surface-container)] focus-visible:ring-[var(--md-sys-color-tertiary)] active:shadow-none disabled:shadow-none disabled:bg-[var(--md-sys-color-on-surface)]/12 disabled:text-[var(--md-sys-color-on-surface)]/38 disabled:cursor-not-allowed" [disabled]="aiService.isLoading()">
+            <button (click)="getAiSuggestions()" class="w-full h-10 px-5 flex items-center justify-center rounded-md font-medium text-sm transition-colors duration-150 ease-in-out focus-visible:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[var(--theme-bg-card)] focus:ring-[var(--theme-accent-secondary-on-container)] bg-[var(--theme-accent-secondary-container)] text-[var(--theme-accent-secondary-on-container)] hover:bg-emerald-200/80 disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed" [disabled]="aiService.isLoading()">
               @if(aiService.isLoading()) {
                 <div class="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
                 <span class="ml-2">生成中...</span>
               } @else {
-                <span>✨ 获取 AI SQL 建议</span>
+                <span>✨ 获取建议</span>
               }
             </button>
           }
         }
         @case('initializing') {
-            <div class="text-sm text-[var(--md-sys-color-on-surface-variant)] p-2 animate-pulse">正在初始化... ⚙️</div>
+            <div class="text-sm text-[var(--theme-text-secondary)] p-2 animate-pulse">正在初始化... ⚙️</div>
         }
         @case('error') {
-            <div class="p-2 text-xs text-[var(--md-sys-color-on-error-container)] bg-[var(--md-sys-color-error-container)] rounded-md">
+            <div class="p-2 text-xs text-red-800 bg-red-100 rounded-md">
             初始化失败
             </div>
         }
       }
   </div>
 
-  <div class="flex-grow overflow-y-auto">
+  <div class="flex-grow overflow-y-auto -mr-2 pr-2">
       @if(databaseService.dbStatus() === 'ready') {
           @if (databaseService.tables().length > 0) {
             <!-- PGLite Sample Tables -->
             @if (databaseService.tablesByCategory().pglite.length > 0) {
               <div class="mb-4">
-                <h4 class="px-3 text-xs font-semibold uppercase text-[var(--md-sys-color-on-surface-variant)]/70">PGLite 示例</h4>
+                <h4 class="px-2 text-xs font-semibold uppercase text-[var(--theme-text-secondary)]/70">PGLite 示例</h4>
                 <ul class="space-y-1 mt-1">
                   @for(table of databaseService.tablesByCategory().pglite; track table.name) {
                     <li>
-                      <div class="w-full flex items-center justify-between text-left px-3 py-2.5 rounded-lg hover:bg-[var(--md-sys-color-surface-container-high)] text-sm font-sans text-[var(--md-sys-color-on-surface)]">
+                      <div class="w-full flex items-center justify-between text-left px-2 py-2 rounded-md hover:bg-gray-100 text-sm font-sans text-[var(--theme-text-primary)]">
                         <div class="flex items-center gap-2 flex-grow overflow-hidden">
                           <input type="checkbox"
                                 [id]="'table-cb-' + table.name"
@@ -53,27 +53,27 @@
                                 [indeterminate]="getTableSelectionState(table.name) === 'some'"
                                 (change)="handleTableSelection(table.name)"
                                 title="选择/取消选择此表中的所有列"
-                                class="h-4 w-4 rounded text-[var(--md-sys-color-primary)] focus:ring-[var(--md-sys-color-primary)] border-[var(--md-sys-color-outline)] bg-transparent cursor-pointer accent-[var(--md-sys-color-primary)]"
+                                class="h-4 w-4 rounded text-[var(--theme-accent-primary)] focus:ring-[var(--theme-accent-primary)] border-[var(--theme-border)] bg-transparent cursor-pointer accent-[var(--theme-accent-primary)]"
                           >
                           <label [for]="'table-cb-' + table.name" (click)="previewTable(table.name, $event)" class="truncate cursor-pointer hover:underline" [title]="'查询 ' + table.name">{{ table.name }}</label>
                         </div>
-                        <button (click)="toggleTable(table.name)" class="w-8 h-8 flex items-center justify-center rounded-full transition-colors duration-150 ease-in-out focus-visible:outline-none text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-on-surface-variant)]/10 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--md-sys-color-surface-container-high)] focus-visible:ring-[var(--md-sys-color-on-surface-variant)] active:bg-[var(--md-sys-color-on-surface-variant)]/20 flex-shrink-0 -mr-1" title="展开/折叠列">
-                          <span class="transition-transform" [class.rotate-90]="expandedTables().has(table.name)">▶</span>
+                        <button (click)="toggleTable(table.name)" class="w-7 h-7 flex items-center justify-center rounded-md transition-colors duration-150 ease-in-out text-[var(--theme-text-secondary)] hover:bg-gray-200 flex-shrink-0 -mr-1" title="展开/折叠列">
+                          <span class="transition-transform text-xs" [class.rotate-90]="expandedTables().has(table.name)">▶</span>
                         </button>
                       </div>
                       @if (expandedTables().has(table.name)) {
                         <ul class="pl-4 mt-1 space-y-1">
                           @for(column of table.schema; track column.sanitizedName) {
-                            <li class="px-2 py-1 text-xs text-[var(--md-sys-color-on-surface-variant)] bg-[var(--md-sys-color-surface-container-low)] rounded-md font-mono flex justify-between items-center">
+                            <li class="px-2 py-1.5 text-xs text-[var(--theme-text-secondary)] bg-gray-50 rounded-md font-mono flex justify-between items-center">
                               <label class="flex items-center gap-2 cursor-pointer w-full">
                                 <input type="checkbox" 
                                       [checked]="databaseService.isSelected(table.name, column.originalName)" 
                                       (change)="handleColumnSelection(table.name, column)" 
-                                      class="h-4 w-4 rounded text-[var(--md-sys-color-primary)] focus:ring-[var(--md-sys-color-primary)] border-[var(--md-sys-color-outline)] bg-transparent cursor-pointer accent-[var(--md-sys-color-primary)]"
+                                      class="h-4 w-4 rounded text-[var(--theme-accent-primary)] focus:ring-[var(--theme-accent-primary)] border-[var(--theme-border)] bg-transparent cursor-pointer accent-[var(--theme-accent-primary)]"
                                 >
                                 <span class="truncate" [title]="column.sanitizedName">{{ column.sanitizedName }}</span>
                               </label>
-                              <span class="text-white bg-[var(--md-sys-color-on-surface-variant)] bg-opacity-80 px-1.5 py-0.5 text-[10px] rounded-md font-sans font-bold flex-shrink-0">{{ column.sqlType }}</span>
+                              <span class="text-white bg-gray-400 px-1.5 py-0.5 text-[10px] rounded-md font-sans font-bold flex-shrink-0">{{ column.sqlType }}</span>
                             </li>
                           }
                         </ul>
@@ -87,11 +87,11 @@
             <!-- Uploaded/User Tables -->
             @if (databaseService.tablesByCategory().uploaded.length > 0) {
               <div class="mb-4">
-                <h4 class="px-3 text-xs font-semibold uppercase text-[var(--md-sys-color-on-surface-variant)]/70">已上传与用户创建</h4>
+                <h4 class="px-2 text-xs font-semibold uppercase text-[var(--theme-text-secondary)]/70">已上传与用户创建</h4>
                 <ul class="space-y-1 mt-1">
                   @for(table of databaseService.tablesByCategory().uploaded; track table.name) {
                     <li>
-                      <div class="w-full flex items-center justify-between text-left px-3 py-2.5 rounded-lg hover:bg-[var(--md-sys-color-surface-container-high)] text-sm font-sans text-[var(--md-sys-color-on-surface)]">
+                      <div class="w-full flex items-center justify-between text-left px-2 py-2 rounded-md hover:bg-gray-100 text-sm font-sans text-[var(--theme-text-primary)]">
                         <div class="flex items-center gap-2 flex-grow overflow-hidden">
                           <input type="checkbox"
                                 [id]="'table-cb-' + table.name"
@@ -99,27 +99,27 @@
                                 [indeterminate]="getTableSelectionState(table.name) === 'some'"
                                 (change)="handleTableSelection(table.name)"
                                 title="选择/取消选择此表中的所有列"
-                                class="h-4 w-4 rounded text-[var(--md-sys-color-primary)] focus:ring-[var(--md-sys-color-primary)] border-[var(--md-sys-color-outline)] bg-transparent cursor-pointer accent-[var(--md-sys-color-primary)]"
+                                class="h-4 w-4 rounded text-[var(--theme-accent-primary)] focus:ring-[var(--theme-accent-primary)] border-[var(--theme-border)] bg-transparent cursor-pointer accent-[var(--theme-accent-primary)]"
                           >
                           <label [for]="'table-cb-' + table.name" (click)="previewTable(table.name, $event)" class="truncate cursor-pointer hover:underline" [title]="'查询 ' + table.name">{{ table.name }}</label>
                         </div>
-                        <button (click)="toggleTable(table.name)" class="w-8 h-8 flex items-center justify-center rounded-full transition-colors duration-150 ease-in-out focus-visible:outline-none text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-on-surface-variant)]/10 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--md-sys-color-surface-container-high)] focus-visible:ring-[var(--md-sys-color-on-surface-variant)] active:bg-[var(--md-sys-color-on-surface-variant)]/20 flex-shrink-0 -mr-1" title="展开/折叠列">
-                          <span class="transition-transform" [class.rotate-90]="expandedTables().has(table.name)">▶</span>
+                        <button (click)="toggleTable(table.name)" class="w-7 h-7 flex items-center justify-center rounded-md transition-colors duration-150 ease-in-out text-[var(--theme-text-secondary)] hover:bg-gray-200 flex-shrink-0 -mr-1" title="展开/折叠列">
+                          <span class="transition-transform text-xs" [class.rotate-90]="expandedTables().has(table.name)">▶</span>
                         </button>
                       </div>
                       @if (expandedTables().has(table.name)) {
                         <ul class="pl-4 mt-1 space-y-1">
                           @for(column of table.schema; track column.sanitizedName) {
-                            <li class="px-2 py-1 text-xs text-[var(--md-sys-color-on-surface-variant)] bg-[var(--md-sys-color-surface-container-low)] rounded-md font-mono flex justify-between items-center">
+                            <li class="px-2 py-1.5 text-xs text-[var(--theme-text-secondary)] bg-gray-50 rounded-md font-mono flex justify-between items-center">
                               <label class="flex items-center gap-2 cursor-pointer w-full">
                                 <input type="checkbox" 
                                       [checked]="databaseService.isSelected(table.name, column.originalName)" 
                                       (change)="handleColumnSelection(table.name, column)" 
-                                      class="h-4 w-4 rounded text-[var(--md-sys-color-primary)] focus:ring-[var(--md-sys-color-primary)] border-[var(--md-sys-color-outline)] bg-transparent cursor-pointer accent-[var(--md-sys-color-primary)]"
+                                      class="h-4 w-4 rounded text-[var(--theme-accent-primary)] focus:ring-[var(--theme-accent-primary)] border-[var(--theme-border)] bg-transparent cursor-pointer accent-[var(--theme-accent-primary)]"
                                 >
                                 <span class="truncate" [title]="column.sanitizedName">{{ column.sanitizedName }}</span>
                               </label>
-                              <span class="text-white bg-[var(--md-sys-color-on-surface-variant)] bg-opacity-80 px-1.5 py-0.5 text-[10px] rounded-md font-sans font-bold flex-shrink-0">{{ column.sqlType }}</span>
+                              <span class="text-white bg-gray-400 px-1.5 py-0.5 text-[10px] rounded-md font-sans font-bold flex-shrink-0">{{ column.sqlType }}</span>
                             </li>
                           }
                         </ul>
@@ -131,7 +131,7 @@
             }
 
           } @else if (!databaseService.isLoading()) {
-              <p class="px-3 text-xs text-[var(--md-sys-color-on-surface-variant)]">没有可用的表。</p>
+              <p class="px-3 text-xs text-[var(--theme-text-secondary)]">没有可用的表。</p>
           }
       }
   </div>

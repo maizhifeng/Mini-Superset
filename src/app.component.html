@@ -1,73 +1,103 @@
 <app-notification-host></app-notification-host>
-<div class="flex h-screen bg-[var(--md-sys-color-background)] text-[var(--md-sys-color-on-surface)]">
+<div class="flex h-screen bg-[var(--theme-bg-content)] text-[var(--theme-text-primary)]">
   <!-- Sidebar -->
   <aside 
-    class="flex flex-col bg-[var(--md-sys-color-surface)] transition-all duration-300 ease-in-out border-r border-[var(--md-sys-color-outline-variant)]"
+    class="flex flex-col bg-[var(--theme-bg-sidebar)] text-[var(--theme-text-on-dark)] transition-all duration-500 ease-in-out border-r border-gray-700/50"
     [class.w-64]="isSidebarOpen()"
     [class.w-20]="!isSidebarOpen()">
-    <div class="flex items-center h-16 px-6 border-b border-white/20 flex-shrink-0 bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)]">
-      <span class="text-2xl mr-4">📊</span>
-      @if (isSidebarOpen()) {
-        <h1 class="text-xl font-bold">Mini Superset</h1>
-      }
+    <div class="flex items-center h-16 px-6 flex-shrink-0 overflow-hidden">
+      <!-- New SVG Icon for Logo -->
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 mr-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+      </svg>
+      <div class="overflow-hidden transition-all duration-500 ease-in-out" [class.max-w-40]="isSidebarOpen()" [class.max-w-0]="!isSidebarOpen()" [class.opacity-100]="isSidebarOpen()" [class.opacity-0]="!isSidebarOpen()">
+        <h1 class="text-xl font-bold whitespace-nowrap">Mini Superset</h1>
+      </div>
     </div>
     <nav class="flex-grow p-4 space-y-2 overflow-y-auto">
       <!-- Main Navigation -->
       <a
         (click)="setView('sql-lab')"
-        [class.bg-[var(--md-sys-color-primary-container)]]="activeView() === 'sql-lab'"
-        [class.text-[var(--md-sys-color-on-primary-container)]]="activeView() === 'sql-lab'"
-        class="flex items-center p-3 rounded-full hover:bg-[var(--md-sys-color-surface-container-high)] cursor-pointer transition-colors"
-        [title]="isSidebarOpen() ? '' : 'SQL 工作台'"
+        class="flex items-center p-3 rounded-lg hover:bg-[var(--theme-sidebar-hover)] cursor-pointer transition-colors relative overflow-hidden"
+        [class.bg-[var(--theme-sidebar-hover)]]="activeView() === 'sql-lab'"
+        [title]="isSidebarOpen() ? '' : 'SQL LAB'"
       >
-        <span class="text-2xl">🧪</span>
-        @if (isSidebarOpen()) {
-          <span class="ml-4 font-medium">SQL 工作台</span>
+        @if(activeView() === 'sql-lab') {
+          <div class="absolute left-0 top-0 h-full w-1 bg-[var(--theme-active-indicator)] rounded-r-full"></div>
         }
+        <!-- New SVG Icon for SQL Lab -->
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        <div class="overflow-hidden transition-all duration-500 ease-in-out" [class.ml-4]="isSidebarOpen()" [class.max-w-40]="isSidebarOpen()" [class.max-w-0]="!isSidebarOpen()" [class.opacity-100]="isSidebarOpen()" [class.opacity-0]="!isSidebarOpen()">
+          <span class="font-medium whitespace-nowrap">SQL LAB</span>
+        </div>
       </a>
       <a
         (click)="setView('dashboard')"
-        [class.bg-[var(--md-sys-color-primary-container)]]="activeView() === 'dashboard'"
-        [class.text-[var(--md-sys-color-on-primary-container)]]="activeView() === 'dashboard'"
-        class="flex items-center p-3 rounded-full hover:bg-[var(--md-sys-color-surface-container-high)] cursor-pointer transition-colors"
+        class="flex items-center p-3 rounded-lg hover:bg-[var(--theme-sidebar-hover)] cursor-pointer transition-colors relative overflow-hidden"
+        [class.bg-[var(--theme-sidebar-hover)]]="activeView() === 'dashboard'"
         [title]="isSidebarOpen() ? '' : '仪表板'"
       >
-        <span class="text-2xl">📈</span>
-        @if (isSidebarOpen()) {
-          <span class="ml-4 font-medium">仪表板</span>
+        @if(activeView() === 'dashboard') {
+          <div class="absolute left-0 top-0 h-full w-1 bg-[var(--theme-active-indicator)] rounded-r-full"></div>
         }
+        <!-- New SVG Icon for Dashboard -->
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+        </svg>
+        <div class="overflow-hidden transition-all duration-500 ease-in-out" [class.ml-4]="isSidebarOpen()" [class.max-w-40]="isSidebarOpen()" [class.max-w-0]="!isSidebarOpen()" [class.opacity-100]="isSidebarOpen()" [class.opacity-0]="!isSidebarOpen()">
+          <span class="font-medium whitespace-nowrap">仪表板</span>
+        </div>
       </a>
     </nav>
-    <div class="p-4 border-t border-[var(--md-sys-color-outline-variant)] flex-shrink-0">
-        <button (click)="toggleSidebar()" class="w-full flex items-center p-3 rounded-full hover:bg-[var(--md-sys-color-surface-container-high)] cursor-pointer transition-colors" [title]="isSidebarOpen() ? '折叠' : '展开'">
-            @if(isSidebarOpen()) {
-                <span class="text-2xl">⬅️</span>
-                <span class="ml-4 font-medium">折叠</span>
-            } @else {
-                <span class="text-2xl">➡️</span>
-            }
+    <div class="p-4 border-t border-gray-700/50 flex-shrink-0 space-y-4">
+        <!-- User Profile -->
+        <div class="flex items-center overflow-hidden">
+            <div class="w-10 h-10 bg-[var(--theme-accent-primary)] rounded-full flex items-center justify-center text-[var(--theme-accent-primary-on)] font-bold flex-shrink-0">A</div>
+            <div class="overflow-hidden transition-all duration-500 ease-in-out" [class.ml-3]="isSidebarOpen()" [class.max-w-40]="isSidebarOpen()" [class.max-w-0]="!isSidebarOpen()" [class.opacity-100]="isSidebarOpen()" [class.opacity-0]="!isSidebarOpen()">
+                <p class="font-semibold truncate">分析师</p>
+                <p class="text-xs text-[var(--theme-text-on-dark-secondary)] truncate">admin@example.com</p>
+            </div>
+        </div>
+
+        <!-- Collapse Button -->
+        <button (click)="toggleSidebar()" class="w-full flex items-center p-3 rounded-lg hover:bg-[var(--theme-sidebar-hover)] cursor-pointer transition-colors overflow-hidden" 
+          [title]="isSidebarOpen() ? '折叠' : '展开'">
+            <span class="flex-shrink-0">
+              @if(isSidebarOpen()) {
+                <!-- New SVG Icon for Collapse -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                </svg>
+              } @else {
+                <!-- New SVG Icon for Expand -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                </svg>
+              }
+            </span>
+            <div class="overflow-hidden transition-all duration-500 ease-in-out" [class.ml-4]="isSidebarOpen()" [class.max-w-40]="isSidebarOpen()" [class.max-w-0]="!isSidebarOpen()" [class.opacity-100]="isSidebarOpen()" [class.opacity-0]="!isSidebarOpen()">
+              <span class="font-medium whitespace-nowrap">折叠</span>
+            </div>
         </button>
     </div>
   </aside>
 
   <!-- Main Content -->
   <main class="flex-1 flex flex-col overflow-hidden">
-    <header class="flex items-center justify-between h-16 px-6 bg-[var(--md-sys-color-primary)] border-b border-white/20 flex-shrink-0 text-[var(--md-sys-color-on-primary)]">
-      <h2 class="text-xl font-semibold">
+    <header class="flex items-center h-16 px-6 flex-shrink-0">
+      <h2 class="text-2xl font-bold text-[var(--theme-text-primary)]">
         @if (activeView() === 'sql-lab') {
-          SQL 工作台
+          SQL LAB
         } @else {
           仪表板
         }
       </h2>
-      <div class="flex items-center space-x-4">
-        <span class="text-sm">欢迎, 分析师!</span>
-        <div class="w-10 h-10 bg-[var(--md-sys-color-primary-container)] rounded-full flex items-center justify-center text-[var(--md-sys-color-on-primary-container)] font-bold">A</div>
-      </div>
     </header>
-    <div class="flex-1 p-6 overflow-y-auto">
+    <div class="flex-1 px-6 pb-6 overflow-y-auto">
       @if (databaseService.error()) {
-        <div class="p-4 mb-4 text-sm text-[var(--md-sys-color-on-error-container)] bg-[var(--md-sys-color-error-container)] rounded-lg">
+        <div class="p-4 mb-4 text-sm text-red-800 bg-red-100 border border-red-200 rounded-lg">
           <strong>错误:</strong> {{ databaseService.error() }}
         </div>
       }

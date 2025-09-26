@@ -1,46 +1,46 @@
 @if(isOpen()) {
 <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in" (click)="close()">
-  <div class="bg-[var(--md-sys-color-surface-container-high)] rounded-2xl shadow-xl w-full max-w-md p-6 m-4 animate-fade-in-short" (click)="$event.stopPropagation()">
+  <div class="bg-[var(--theme-bg-card)] rounded-lg shadow-xl w-full max-w-md p-6 m-4 animate-fade-in-short" (click)="$event.stopPropagation()">
     <div class="flex justify-between items-center mb-4">
-      <h3 class="text-xl font-medium text-[var(--md-sys-color-on-surface)]">📤 上传 CSV 文件</h3>
-      <button (click)="close()" class="w-10 h-10 flex items-center justify-center rounded-full transition-colors duration-150 ease-in-out focus-visible:outline-none text-[var(--md-sys-color-on-surface-variant)] hover:bg-[var(--md-sys-color-on-surface-variant)]/10 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--md-sys-color-surface-container-high)] focus-visible:ring-[var(--md-sys-color-on-surface-variant)] active:bg-[var(--md-sys-color-on-surface-variant)]/20">&times;</button>
+      <h3 class="text-xl font-medium text-[var(--theme-text-primary)]">📤 上传 CSV 文件</h3>
+      <button (click)="close()" class="w-8 h-8 flex items-center justify-center rounded-full transition-colors text-[var(--theme-text-secondary)] hover:bg-gray-100">&times;</button>
     </div>
 
     <div class="space-y-4">
       <div>
-        <label for="modal-file-upload" class="block text-sm font-medium text-[var(--md-sys-color-on-surface-variant)] mb-2">选择文件</label>
-        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-[var(--md-sys-color-outline)] border-dashed rounded-md">
+        <label for="modal-file-upload" class="block text-sm font-medium text-[var(--theme-text-secondary)] mb-2">选择文件</label>
+        <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-[var(--theme-border)] border-dashed rounded-md">
           <div class="space-y-1 text-center">
-            <svg class="mx-auto h-12 w-12 text-[var(--md-sys-color-outline)]" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+            <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
               <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
-            <div class="flex text-sm text-[var(--md-sys-color-on-surface-variant)]">
-              <label for="modal-file-upload" class="relative cursor-pointer bg-transparent rounded-md font-medium text-[var(--md-sys-color-primary)] hover:text-[var(--md-sys-color-on-primary-container)] focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-[var(--md-sys-color-primary)]">
+            <div class="flex text-sm text-[var(--theme-text-secondary)]">
+              <label for="modal-file-upload" class="relative cursor-pointer bg-transparent rounded-md font-medium text-[var(--theme-accent-primary)] hover:text-[var(--theme-accent-primary-hover)] focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-[var(--theme-accent-primary)]">
                 <span>点击上传</span>
                 <input id="modal-file-upload" name="modal-file-upload" type="file" class="sr-only" accept=".csv" (change)="onFileSelected($event)">
               </label>
               <p class="pl-1">或拖拽文件到这里</p>
             </div>
             @if(fileToUpload()) {
-               <p class="text-xs text-[var(--md-sys-color-on-surface-variant)] mt-2 font-semibold">{{ fileToUpload()?.name }}</p>
+               <p class="text-xs text-[var(--theme-text-secondary)] mt-2 font-semibold">{{ fileToUpload()?.name }}</p>
             } @else {
-               <p class="text-xs text-[var(--md-sys-color-on-surface-variant)]">CSV, 最大 10MB</p>
+               <p class="text-xs text-[var(--theme-text-secondary)]">CSV, 最大 10MB</p>
             }
           </div>
         </div>
       </div>
       
       <div>
-        <label class="text-sm font-medium text-[var(--md-sys-color-on-surface-variant)]">文件编码</label>
+        <label class="text-sm font-medium text-[var(--theme-text-secondary)]">文件编码</label>
         <div class="flex items-center gap-4 mt-2">
             <div class="flex items-center gap-2">
                 <label class="flex items-center cursor-pointer">
-                    <input type="radio" name="encoding-modal" value="utf-8" [checked]="fileEncoding() === 'utf-8'" (change)="fileEncoding.set('utf-8')" class="h-4 w-4 focus:ring-offset-0 focus:ring-2 accent-[var(--md-sys-color-primary)] border-[var(--md-sys-color-outline)]">
-                    <span class="ml-2 text-sm text-[var(--md-sys-color-on-surface-variant)]">UTF-8</span>
+                    <input type="radio" name="encoding-modal" value="utf-8" [checked]="fileEncoding() === 'utf-8'" (change)="fileEncoding.set('utf-8')" class="h-4 w-4 focus:ring-offset-0 focus:ring-2 accent-[var(--theme-accent-primary)] border-[var(--theme-border)]">
+                    <span class="ml-2 text-sm text-[var(--theme-text-secondary)]">UTF-8</span>
                 </label>
                 <label class="flex items-center cursor-pointer">
-                    <input type="radio" name="encoding-modal" value="gbk" [checked]="fileEncoding() === 'gbk'" (change)="fileEncoding.set('gbk')" class="h-4 w-4 focus:ring-offset-0 focus:ring-2 accent-[var(--md-sys-color-primary)] border-[var(--md-sys-color-outline)]">
-                    <span class="ml-2 text-sm text-[var(--md-sys-color-on-surface-variant)]">GBK</span>
+                    <input type="radio" name="encoding-modal" value="gbk" [checked]="fileEncoding() === 'gbk'" (change)="fileEncoding.set('gbk')" class="h-4 w-4 focus:ring-offset-0 focus:ring-2 accent-[var(--theme-accent-primary)] border-[var(--theme-border)]">
+                    <span class="ml-2 text-sm text-[var(--theme-text-secondary)]">GBK</span>
                 </label>
             </div>
         </div>
@@ -48,10 +48,10 @@
     </div>
 
     <div class="mt-6 flex justify-end space-x-3">
-      <button (click)="close()" type="button" class="h-10 px-6 flex items-center justify-center rounded-full font-medium text-sm transition-colors duration-150 ease-in-out focus-visible:outline-none border border-[var(--md-sys-color-outline)] text-[var(--md-sys-color-primary)] hover:bg-[var(--md-sys-color-primary)]/10 focus-visible:border-[var(--md-sys-color-primary)] focus-visible:ring-2 focus-visible:ring-[var(--md-sys-color-primary)]/30 active:bg-[var(--md-sys-color-primary)]/20 disabled:border-[var(--md-sys-color-on-surface)]/12 disabled:text-[var(--md-sys-color-on-surface)]/38 disabled:hover:bg-transparent disabled:cursor-not-allowed">
+      <button (click)="close()" type="button" class="h-10 px-5 flex items-center justify-center rounded-md font-medium text-sm transition-colors duration-150 ease-in-out focus-visible:outline-none border border-[var(--theme-border)] text-[var(--theme-text-secondary)] hover:bg-gray-100 focus:ring-2 focus:ring-gray-400 focus:ring-offset-2">
         取消
       </button>
-      <button (click)="handleUpload()" type="button" class="h-10 px-6 flex items-center justify-center rounded-full font-medium text-sm transition-all duration-150 ease-in-out focus-visible:outline-none bg-[var(--md-sys-color-primary)] text-[var(--md-sys-color-on-primary)] shadow-md hover:shadow-lg focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--md-sys-color-primary)] active:shadow-sm disabled:shadow-none disabled:bg-[var(--md-sys-color-on-surface)]/12 disabled:text-[var(--md-sys-color-on-surface)]/38 disabled:cursor-not-allowed" [disabled]="!fileToUpload() || databaseService.isLoading()">
+      <button (click)="handleUpload()" type="button" class="h-10 px-5 flex items-center justify-center rounded-md font-medium text-sm transition-colors duration-150 ease-in-out focus-visible:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--theme-accent-primary)] bg-[var(--theme-accent-primary)] text-[var(--theme-accent-primary-on)] hover:bg-[var(--theme-accent-primary-hover)] disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed" [disabled]="!fileToUpload() || databaseService.isLoading()">
         @if(databaseService.isLoading()) {
           <span>正在加载...</span>
         } @else {
